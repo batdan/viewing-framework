@@ -37,7 +37,7 @@ class base
     protected $_dataPageList;                     // Array : choix nb résultats / page
     protected $_dataPageSize;                     // Nombre de résultats par page au chargement
     protected $_dataSearch;                       // Boolean : Activation ou non du moteur de recherche
-    protected $_dataSortName;                     // Forcher un champs pour le tri au chargement
+    protected $_dataSortName;                     // Forcer un champs pour le tri au chargement
     protected $_dataSortOrder;                    // Ordre de tri ( asc | desc ) -> par défaut 'asc'
     protected $_showColumns;                      // Activation de la gestion du masquage de colonnes
     protected $_showRefresh;                      // Affichage ou non du bouton 'refresh'
