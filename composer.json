@@ -1,0 +1,17 @@
+{
+	"name" : "vw/framework",
+	"type" : "library",
+	"licence" : "proprietary",
+	"autoload" : {
+		"classmap" : [
+			"lib/"
+		]
+	},
+	"require" : {
+		"greenlion/php-sql-parser": "@stable",
+		"firephp/firephp-core": "@stable",
+        "danack/syntaxhighlighter": "@stable",
+		"jenner/simple_fork": "@stable",
+		"mrclay/minify": "@stable"
+	}
+}
