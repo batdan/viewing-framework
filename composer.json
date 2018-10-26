@@ -1,5 +1,5 @@
 {
-	"name" : "vw/framework",
+	"name" : "batdan/viewing-framework",
 	"type" : "library",
 	"licence" : "proprietary",
 	"autoload" : {
