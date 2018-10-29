@@ -1,7 +1,7 @@
 {
-	"name" : "vw/framework",
-	"type" : "library",
-	"licence" : "proprietary",
+	"name": "vw/framework",
+	"type": "library",
+	"licence": "proprietary",
 	"authors": [
         {
             "name": "Daniel Gomes",
@@ -9,12 +9,12 @@
             "role": "Developer"
         }
     ]
-	"autoload" : {
+	"autoload": {
 		"classmap" : [
 			"lib/"
 		]
 	},
-	"require" : {
+	"require": {
 		"greenlion/php-sql-parser": "@stable",
 		"firephp/firephp-core": "@stable",
         "danack/syntaxhighlighter": "@stable",
