@@ -1,6 +1,8 @@
 <?php
 namespace tpl;
 
+use core\config;
+
 /**
  * Barre de navigation
  *
@@ -47,8 +49,13 @@ class navbar
     private function init()
     {
         // Nom du projet
-        $project = \core\config::getConfig('project');
+        $project = config::getConfig('project');
         $projectName = $project['name'];
+
+        $dashboardLink = '/modules/dashboard/dashboard.php';
+        if (isset($project['dashboard'])) {
+            $dashboardLink = $project['dashboard'];
+        }
 
         $navbar = $this->_dom->createElement('nav');
     	$navbar->setAttribute('class', 'navbar navbar-inverse navbar-fixed-top my-navbar');
@@ -63,7 +70,9 @@ class navbar
         // Marque
         $navbarBrand = $this->_dom->createElement('a');
         $navbarBrand->setAttribute('class', 'navbar-brand brand navbar-level-1');
-        $navbarBrand->setAttribute('href', '/modules/dashboard/dashboard.php');
+
+        // Link dashboard
+        $navbarBrand->setAttribute('href', $dashboardLink);
 
         $iBrand = $this->_dom->createElement('div');
         $iBrand->setAttribute('class', 'fa fa-clone i-brand');
