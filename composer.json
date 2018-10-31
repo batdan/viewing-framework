@@ -7,7 +7,7 @@
             "name": "Daniel Gomes",
             "role": "Developer"
         }
-    ]
+    ],
 	"autoload": {
 		"classmap" : [
 			"lib/"
