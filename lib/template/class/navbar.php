@@ -50,7 +50,7 @@ class navbar
     {
         // Nom du projet
         $project = config::getConfig('project');
-        $projectName = $project['name'];
+        $projectName = $project['name']; 
 
         $dashboardLink = '/modules/dashboard/dashboard.php';
         if (isset($project['dashboard'])) {
