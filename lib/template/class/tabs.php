@@ -176,7 +176,7 @@ eof;
     /**
      * Permet d'insérer du code la fin des éléments du contenu d'un onglet
      */
-    public function append($tab, $element)
+    public function append($tab, $object)
     {
     	$xpath 	= new \DOMXPath($this->_dom);
 
@@ -185,7 +185,11 @@ eof;
     	$entries= $xpath->query($query);
     	$div	= $entries->item(0);
 
-    	$nodes	= $element->getDom();
+		if ($object instanceof \DOMDocument) {
+	        $nodes = $object;
+	    } else {
+	        $nodes = $object->getDom();
+	    }
 
     	foreach ($nodes->childNodes as $child) {
     		$newNode = $this->_dom->importNode($child, true);

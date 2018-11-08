@@ -96,9 +96,9 @@ class content
 
         // Main
         $content = $this->_dom->createElement('div');
-        $content->setAttribute('id', 'main');
+        $content->setAttribute('id',    'main');
         $content->setAttribute('class', 'content fill');
-        $content->setAttribute('role', 'first-content');
+        $content->setAttribute('role',  'first-content');
         $content->setAttribute('style', 'display:table-cell; padding-left:15px; padding-right:15px;');
 
         $container->appendChild($content);
@@ -110,7 +110,7 @@ class content
     /**
      * Permet d'insérer du code dans la page
      */
-    public function append($element)
+    public function append($object)
     {
         $xpath = new \DOMXPath($this->_dom);
 
@@ -118,7 +118,11 @@ class content
         $entries= $xpath->query($query);
         $form	= $entries->item(0);
 
-        $nodes	= $element->getDom();
+        if ($object instanceof \DOMDocument) {
+            $nodes = $object;
+        } else {
+            $nodes = $object->getDom();
+        }
 
         foreach ($nodes->childNodes as $child) {
             $newNode = $this->_dom->importNode($child, true);

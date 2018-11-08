@@ -180,7 +180,7 @@ class container
 	/**
 	 * Permet d'insérer du code la fin d'un colonne de container
 	 */
-	public function append($col, $element)
+	public function append($col, $object)
 	{
 		$xpath 	= new \DOMXPath($this->_dom);
 
@@ -189,7 +189,11 @@ class container
 		$entries= $xpath->query($query);
 		$div	= $entries->item(0);
 
-		$nodes	= $element->getDom();
+		if ($object instanceof \DOMDocument) {
+            $nodes = $object;
+        } else {
+            $nodes = $object->getDom();
+        }
 
 		foreach ($nodes->childNodes as $child) {
 			$newNode = $this->_dom->importNode($child, true);
