@@ -69,8 +69,8 @@ class libIncluderList extends libIncluder
         self::add_jQuery();
         self::add_bootstrap();
 
-        $js     = array("/lib/js/auth.js");
-        $css    = array("/lib/css/auth.css");
+        $js     = array("/lib/auth/js/auth.js");
+        $css    = array("/lib/auth/css/auth.css");
 
         parent::add_JsLib($js, $optimize);
         parent::add_CssLib($css, $optimize);
