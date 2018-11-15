@@ -14,10 +14,10 @@ class privilege
      */
     public static function checkLogin()
     {
-        if ($_SERVER['REQUEST_URI'] != '' && $_SERVER['REQUEST_URI'] != '/' && $_SERVER['REQUEST_URI'] != '/lib/ajax/ajax_auth.php' && !isset($_SESSION['auth']['id'])) {
+        if ($_SERVER['REQUEST_URI'] != '' && $_SERVER['REQUEST_URI'] != '/' && $_SERVER['REQUEST_URI'] != '/lib/auth/ajax/ajax_auth.php' && !isset($_SESSION['auth']['id'])) {
 
             $_SESSION['page_lost'] = $_SERVER['REQUEST_URI'];
-            
+
             header('Location: /');
         }
     }

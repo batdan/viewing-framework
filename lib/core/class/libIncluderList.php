@@ -48,13 +48,14 @@ class libIncluderList extends libIncluder
     {
         self::add_jQuery();
 
-        $js     = array("/lib/js/default.js",
+        $js     = array("/lib/template/js/default.js",
                         "/vendor/vw/framework/lib/core/js/ping.js",
                         "/vendor/vw/framework/lib/template/js/sidebar.js");
 
-        $css    = array("/lib/css/default.css",
-                        "/vendor/vw/framework/lib/template/css/sidebar.css",
-                        "/vendor/vw/framework/lib/template/css/navbar.css");
+        $css    = array("/vendor/vw/framework/lib/template/css/sidebar.css",
+                        "/vendor/vw/framework/lib/template/css/navbar.css",
+                        "/lib/template/css/default.css",
+                        "/lib/template/css/sidebar.css",);
 
         parent::add_JsLib($js, $optimize);
         parent::add_CssLib($css, $optimize);
