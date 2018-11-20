@@ -115,7 +115,7 @@ class config
 		while (($file = readdir($dh)) !== false) {
 
 			// Récupération des fichiers du dossier
-			if ( $file != '.' && $file != '..' && !is_dir($file)) {
+			if ( $file != '.' && $file != '..' && !is_dir($file) && !strstr($file, '.dist')) {
 
 				$expFile = explode('.', $file);
 
