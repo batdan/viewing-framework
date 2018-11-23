@@ -40,7 +40,6 @@ class config
 		// Récupération d'une configuration en PHP
 		} elseif ($extension == 'yml' || $extension == 'yaml') {
 
-<<<<<<< HEAD
 			// Les fonction YAML PHP sont implémentés
 			if (function_exists('yaml_parse_file')) {
 
@@ -58,14 +57,6 @@ class config
 				error_log("Fonction 'yaml_parse_file' absente : http://php.net/manual/fr/function.yaml-parse-file.php");
 			}
 
-=======
-			if (! function_exists('yaml_parse_file')) {
-				throw new \Exception("Fonction 'yaml_parse_file' absente : http://php.net/manual/fr/function.yaml-parse-file.php", 1);
-			}
-
-			return self::$_instance[$confFile] = \yaml_parse_file($pathConfFile);
-
->>>>>>> 057bb22de032834039a4ce7c64c66cac6b2c3d11
 		} else {
 			throw new \Exception("Seuls les fichiers php, yml & yaml sont pris en charge", 1);
 		}
@@ -137,8 +128,7 @@ class config
 		while (($file = readdir($dh)) !== false) {
 
 			// Récupération des fichiers du dossier
-			if ( $file != '.' && $file != '..' && !is_dir($file) && !strstr($file, '.dist')) {
-<<<<<<< HEAD
+			if ( $file != '.' && $file != '..' && !is_dir($file) && !strstr($file, '.dist')) { 
 
 				$expFile = explode('.', $file);
 
@@ -154,23 +144,6 @@ class config
 			throw new \Exception("Fichier de configuration absent", 1);
 		}
 
-=======
-
-				$expFile = explode('.', $file);
-
-				if ($expFile[0] == $confFile) {
-					$extension = strtolower(end($expFile));
-
-					break;
-				}
-			}
-		}
-
-		if (!isset($extension)) {
-			throw new \Exception("Fichier de configuration absent", 1);
-		}
-
->>>>>>> 057bb22de032834039a4ce7c64c66cac6b2c3d11
 		// on ferme la connection
 		closedir($dh);
 
