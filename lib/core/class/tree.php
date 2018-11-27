@@ -114,8 +114,18 @@ class tree
 
                         if ($res_ws->lien_interne == 1) {
 
+                            $structureUrl_1 =  __DIR__ . '/../../../../../..' . $res_ws->url;
+                            $structureUrl_2 =  __DIR__ . '/../../../../../../public' . $res_ws->url;
+
                             $getIdProject = $res->id;
-                            $sub = include( __DIR__ . '/../../../../../..' . $res_ws->url );
+
+                            if (file_exists($structureUrl_1)) {
+                                $sub = include( $structureUrl_1 );
+                            }
+
+                            if (file_exists($structureUrl_2)) {
+                                $sub = include( $structureUrl_2 );
+                            }
 
                         } else {
 
