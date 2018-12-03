@@ -1,6 +1,10 @@
 <?php
 namespace tpl;
 
+use core\tree;
+use core\dbSingleton;
+use core\libIncluder;
+
 /**
  * Barre de menus de gauche
  *
@@ -26,7 +30,7 @@ class sidebar
     public function __construct($idMenu = null)
     {
         // PDO
-        $this->_dbh = \core\dbSingleton::getInstance();
+        $this->_dbh = dbSingleton::getInstance();
 
         // Permet de relier une page à un élémént de menu
         $this->_idMenu = $idMenu;
@@ -35,7 +39,7 @@ class sidebar
         $this->_dom = new \DOMDocument("1.0", "utf-8");
 
         // Données sur l'arbre des menus de gauche
-        $tree = new \core\tree($this->_idMenu);
+        $tree = new tree($this->_idMenu);
         $this->_leftMenu = $tree->getLeftMenus();  // Récupération des menus de gauche
         $this->_treeUrl = $tree->getTreeUrl();     // Récupération de l'arborescence de l'url en cours
 
@@ -47,14 +51,14 @@ class sidebar
 
         // Hauteur du menu de gauche
         $js = <<<eof
-/*
-majHeightLeftSideBar();
-setTimeout( function() {
-    majHeightLeftSideBar();
-}, 800);
-*/
+            /*
+            majHeightLeftSideBar();
+            setTimeout( function() {
+                majHeightLeftSideBar();
+            }, 800);
+            */
 eof;
-        \core\libIncluder::add_JsScript($js);
+        libIncluder::add_JsScript($js);
     }
 
 
@@ -133,7 +137,13 @@ eof;
                     $li->setAttribute('id', 'li_' . $key);
 
                     $a = $this->_dom->createElement('a');
-                    $a->setAttribute('href', $menu['path']);
+                    if (!empty($menu['path'])) {
+                        $a->setAttribute('href', $menu['path']);
+                    } else {
+                        if (isset($menu['sub']) && is_array($menu['sub']) && count($menu['sub'])>0) {
+                            $a->setAttribute('href', 'javascript:openOrCloseMenu(\'sidebarFleche_' . $key . '\')');
+                        }
+                    }
                     $a->setAttribute('class', 'link');
 
                     // Fond du premier niveau de menu de gauche
@@ -142,7 +152,7 @@ eof;
                     }
 
                     // Page en cours
-                    if (strpos($_SERVER['REQUEST_URI'], $menu['path']) !== false || $key == $this->_idMenu) {
+                    if (!empty($menu['path']) && (strstr($_SERVER['REQUEST_URI'], $menu['path']) || $key == $this->_idMenu)) {
                         $a->setAttribute('class', 'link activ');
                     }
 
@@ -222,11 +232,17 @@ eof;
             $li->setAttribute('style', 'display:none;');
 
             $a = $this->_dom->createElement('a');
-            $a->setAttribute('href', $menu['path']);
+            if (!empty($menu['path'])) {
+                $a->setAttribute('href', $menu['path']);
+            } else {
+                if (isset($menu['sub']) && is_array($menu['sub']) && count($menu['sub'])>0) {
+                    $a->setAttribute('href', 'javascript:openOrCloseMenu(\'sidebarFleche_' . $key . '\')');
+                }
+            }
             $a->setAttribute('class', 'link');
 
             // Page en cours
-            if (strpos($_SERVER['REQUEST_URI'], $menu['path']) > -1 || $key == $this->_idMenu) {
+            if (!empty($menu['path']) && (strstr($_SERVER['REQUEST_URI'], $menu['path']) || $key == $this->_idMenu)) {
                 $a->setAttribute('class', 'link activ');
             }
 
@@ -287,7 +303,7 @@ eof;
 
                 if ($menu['position'] == 'left') {
 
-                    if (strpos($_SERVER['REQUEST_URI'], $menu['path']) === false) {
+                    if (empty($menu['path']) || (!empty($menu['path']) && !strstr($_SERVER['REQUEST_URI'], $menu['path']))) {
                         $js[] = "$('#sidebarFleche_" . $menu['id'] . "').attr('class', 'fleche fa fa-angle-down');";
                     }
 
@@ -298,30 +314,22 @@ eof;
 
         // On rend visible tous les éléments du niveau de la sélection
         if (isset($this->_treeUrl[count($this->_treeUrl) - 2])) {
-            $id_parent_parent    = $this->_treeUrl[count($this->_treeUrl) - 2]['id_parent'];
-            $level_parent_parent = $this->_treeUrl[count($this->_treeUrl) - 2]['level'];
-            $tree = new \core\tree($this->_idMenu);
-            $listChilds = $tree->getTree($id_parent_parent, $level_parent_parent);
-
             $id_parent = $this->_treeUrl[count($this->_treeUrl) - 1]['id_parent'];
+            $listChilds = $this->searchChields($this->_leftMenu, $id_parent);
 
-            if (isset($listChilds[$id_parent])) {
-                foreach ($listChilds[$id_parent]['sub'] as $k => $v) {
+            if (isset($listChilds)) {
+                foreach ($listChilds as $k => $v) {
                     $js[] = "$('#li_" . $k . "').removeAttr('style');";
                 }
             }
         }
 
         if (isset($this->_treeUrl[count($this->_treeUrl) - 3])) {
-            $id_parent_parent    = $this->_treeUrl[count($this->_treeUrl) - 3]['id_parent'];
-            $level_parent_parent = $this->_treeUrl[count($this->_treeUrl) - 3]['level'];
-            $tree = new \core\tree($this->_idMenu);
-            $listChilds = $tree->getTree($id_parent_parent, $level_parent_parent);
-
             $id_parent = $this->_treeUrl[count($this->_treeUrl) - 2]['id_parent'];
+            $listChilds = $this->searchChields($this->_leftMenu, $id_parent);
 
-            if (isset($listChilds[$id_parent])) {
-                foreach ($listChilds[$id_parent]['sub'] as $k => $v) {
+            if (isset($listChilds)) {
+                foreach ($listChilds as $k => $v) {
                     $js[] = "$('#li_" . $k . "').removeAttr('style');";
                 }
             }
@@ -344,7 +352,29 @@ eof;
 
         $js = implode(chr(10), $js);
 
-        \core\libIncluder::add_JsScript($js);
+        libIncluder::add_JsScript($js);
+    }
+
+
+    /**
+     * Récupération des enfants d'un menu
+     */
+    private function searchChields($menus, $id_parent)
+    {
+        $res = false;
+
+        foreach ($menus as $k => $v) {
+            if ($k == $id_parent) {
+                $res = $v['sub'];
+                break;
+            } else {
+                if (is_array($v['sub'])) {
+                    $res = $this->searchChields($v['sub'], $id_parent);
+                }
+            }
+        }
+
+        return $res;
     }
 
 

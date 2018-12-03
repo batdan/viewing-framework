@@ -102,7 +102,7 @@ class tree
 
                 // Vérification de la présence d'un webservice pour les sous-menus
                 $sub = false;
-                if ($res->id_webservice && ! empty($res->id_webservice)) {
+                if ($res->id_webservice && !empty($res->id_webservice)) {
 
                     $req_ws = "SELECT lien_interne, url FROM tree_ws WHERE id = :id";
                     $sql_ws = $this->_dbh->prepare($req_ws);
@@ -114,17 +114,17 @@ class tree
 
                         if ($res_ws->lien_interne == 1) {
 
-                            $structureUrl_1 =  __DIR__ . '/../../../../../..' . $res_ws->url;
-                            $structureUrl_2 =  __DIR__ . '/../../../../../../public' . $res_ws->url;
-
                             $getIdProject = $res->id;
 
-                            if (file_exists($structureUrl_1)) {
-                                $sub = include( $structureUrl_1 );
+                            $proto = 'http://';
+                            if ($_SERVER['SERVER_PROTOCOL'] == 'HTTPS') {
+                                $proto = 'https://';
                             }
 
-                            if (file_exists($structureUrl_2)) {
-                                $sub = include( $structureUrl_2 );
+                            if ($json_ws = file( $proto . $_SERVER['HTTP_HOST'] . $res_ws->url)) {
+
+                                $json_ws = $json_ws[0];
+                                $sub = json_decode($json_ws, true);
                             }
 
                         } else {
@@ -134,12 +134,7 @@ class tree
                             $json_ws = file( $res_ws->url . '?id_project=' . $res->id );
                             $json_ws = $json_ws[0];
 
-                            $menus = json_decode($json_ws);
-
-                            $sub = array();
-                            foreach ($menus as $k=>$v) {
-                                $sub[$k] = get_object_vars($v);
-                            }
+                            $sub = json_decode($json_ws, true);
                         }
                     }
                 }
