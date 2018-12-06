@@ -40,7 +40,7 @@ class data extends ajax
 
         $champs = $this->_dataSet;
 
-        if (isset($champs[0]) && count($champs[0]) > 0) {
+        if (isset($champs[0]) && count((array) $champs[0]) > 0) {
             foreach ($champs[0] as $k=>$v) {
                 $this->_champs[] = $k;
             }
