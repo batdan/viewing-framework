@@ -58,22 +58,21 @@ class sql extends ajax
      */
     protected function setData()
     {
+        // Instance de PHPSQLParser
         $parser = new PHPSQLParser($this->_req);
         $parsed = $parser->parsed;
 
         // Liste des champs de la requête
         $this->setChamps();
 
-        // On compte le nombre de lignes
-        unset($parsed['LIMIT']);
+        // Instance PHPSQLCreator
         $creator = new PHPSQLCreator($parsed);
-        $req = $creator->created;
-        $sql = $this->_dbh->query($req);
 
-        $this->_total = $sql->rowCount();
+        // Comptage du nombre de lignes
+        $this->countResult($parsed);
 
         // SEARCH
-        if (! empty($this->_search)) {
+        if (! empty($this->_search) || (isset($parsed['WHERE']) && count($parsed['WHERE']) > 0)) {
             if (isset($parsed['WHERE']) && count($parsed['WHERE']) > 0) {
                 $where = $parsed['WHERE'];
             } else {
@@ -84,9 +83,9 @@ class sql extends ajax
 
             $creator = new PHPSQLCreator($parsed);
             $req = $creator->created;
-            $sql = $this->_dbh->query($req);
 
-            $this->_total = $sql->rowCount();
+            // Comptage du nombre de lignes
+            $this->countResult($parsed, $req);
         }
 
         // ORDER BY
@@ -101,7 +100,31 @@ class sql extends ajax
         $creator = new PHPSQLCreator($parsed);
         $req = $creator->created;
         $sql = $this->_dbh->query($req);
+
         $this->_rows = $sql->fetchAll();
+    }
+
+
+    /**
+     * Comptage du nombre de résultats
+     */
+    private function countResult($parsed, $baseReq = null)
+    {
+        $tableName = $parsed['FROM'][0]['table'];
+        $firstChp  = $parsed['SELECT'][0]['base_expr'];
+
+        $req = "SELECT COUNT($firstChp) AS myCount FROM $tableName";
+
+        if (!is_null($baseReq)) {
+
+            $expReq = explode('WHERE', $baseReq);
+            $req .= " WHERE" . $expReq[1];
+        }
+
+        $sql = $this->_dbh->query($req);
+        $res = $sql->fetch();
+
+        $this->_total = $res->myCount;
     }
 
 
