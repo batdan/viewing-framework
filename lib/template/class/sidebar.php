@@ -317,7 +317,7 @@ eof;
             $id_parent = $this->_treeUrl[count($this->_treeUrl) - 1]['id_parent'];
             $listChilds = $this->searchChields($this->_leftMenu, $id_parent);
 
-            if (isset($listChilds)) {
+            if (isset($listChilds) && is_array($listChilds) && count($listChilds) > 0) {
                 foreach ($listChilds as $k => $v) {
                     $js[] = "$('#li_" . $k . "').removeAttr('style');";
                 }
@@ -328,7 +328,7 @@ eof;
             $id_parent = $this->_treeUrl[count($this->_treeUrl) - 2]['id_parent'];
             $listChilds = $this->searchChields($this->_leftMenu, $id_parent);
 
-            if (isset($listChilds)) {
+            if (isset($listChilds) && is_array($listChilds) && count($listChilds) > 0) {
                 foreach ($listChilds as $k => $v) {
                     $js[] = "$('#li_" . $k . "').removeAttr('style');";
                 }
