@@ -5,9 +5,11 @@ use core\libIncluder;
 use core\libIncluderList;
 
 /**
- * Compilation des données
- * pour la création d'un tableau de statistiques
- * et si demandé d'un graphique
+ * Compilation des données pour la création :
+ * 		- d'un tableau de statistiques
+ * 		- d'un graphique
+ *
+ * @author Daniel Gomes
  */
 class Stats_Bases
 {
@@ -71,6 +73,12 @@ class Stats_Bases
 	protected $groupColor;
 
 	/**
+	 * Scripts JS appelé après le chargement de la page
+	 */
+	protected $jsIncludeCallback;
+	protected $js = '';
+
+	/**
 	 * Jour de la semaine - MySql DATE_FORMAT '%w'
 	 */
 	protected $jourSemaine = array('Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi');
@@ -86,7 +94,7 @@ class Stats_Bases
 		$options = array_merge($this->getDefaultOptions(), $options);
         $this->initOptions($options);
 
-		$this->js = '';
+		// $this->js = '';
 
 		// Valeur par défaut des champs de la time line : fields
 		//$this->getDefaultOptionsFields();
@@ -102,6 +110,9 @@ class Stats_Bases
 		libIncluderList::add_bootstrapTable();
 		libIncluderList::add_bootstrapSelect();
 		libIncluderList::add_bootstrapDatetimepicker();
+		libIncluderList::add_highCharts();
+
+		libIncluder::add_CssLib("/vendor/vw/framework/lib/plotTime/css/plotTime.css");
 
 		libIncluder::add_JsScript("$('[data-tooltip]').tooltip();");
 
@@ -113,13 +124,12 @@ class Stats_Bases
 		//
 		// \ZiIncluder::getInstance()->getIncludeManager()->addInlineScript("$('[data-tooltip]').tooltip();");
 
-		$js = '';
+		// $js = '';
 
 		if ($this->graph) {
-			$js .= $this->dataChartJs();
+			$this->js .= $this->dataChartJs();
+			$this->addJs();
 		}
-
-        $this->addJs($js);
 	}
 
 
@@ -177,9 +187,9 @@ class Stats_Bases
 		return $this->action;
 	}
 
-	protected function addJs($js)
+	protected function addJs()
 	{
-		$this->js .= $js;
+		libIncluder::add_JsScript($this->js);
 	}
 
 
@@ -621,7 +631,10 @@ eof;
 	 */
 	protected function renderThead()
 	{
-		if (! isset($this->data[0]['values'])) {
+		$dataKeys = array_keys($this->data);
+		$firstKey = $dataKeys[0];
+
+		if (! isset($this->data[$firstKey]['values'])) {
 			$html = '<thead><tr>' . chr(10);
 			$html.= '<th>Aucun résultat</th>' . chr(10);
 			$html.= '</thead></tr>' . chr(10);

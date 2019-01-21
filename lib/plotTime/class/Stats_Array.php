@@ -2,7 +2,9 @@
 namespace vw\plotTime;
 
 /**
- * Création d'une statisque sur la base d'un tableau
+ * Création d'une statisque sur la base d'un tableau PHP
+ *
+ * @author Daniel Gomes
  */
 class Stats_Array extends Stats_Bases
 {

@@ -2,7 +2,9 @@
 namespace vw\plotTime;
 
 /**
- * Affichage HTML
+ * Rendu HTML
+ *
+ * @author Daniel Gomes
  */
 class Stats_PageRenderer
 {
@@ -28,9 +30,6 @@ class Stats_PageRenderer
 	 */
 	public function render()
 	{
-		// ob_start();
-		$i = \ZiIncluder::getInstance()->getIncludeManager();
-
 		$title = $this->grid->getTitle();
 
 		if (!empty($title)) {
@@ -43,25 +42,8 @@ class Stats_PageRenderer
 				    });
 				})(jQuery);
 eof;
-
-			$i->addInlineScript($js);
 		}
 
-		return <<<eof
-			<!DOCTYPE html>
-			<html lang="fr">
-			<head>
-			    <meta charset="utf-8">
-			    <title></title>
-			    {$i->formatStylesheets()}
-			</head>
-			<body>
-			{$this->grid->getBreadcrumb()->render()}
-			{$this->grid->render()}
-			{$i->formatScripts()}
-			{$i->formatInlineScripts()}
-			</body>
-			</html>
-eof;
+		return $this->grid->render();
 	}
 }

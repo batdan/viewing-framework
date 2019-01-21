@@ -1,8 +1,12 @@
 <?php
 namespace vw\plotTime;
 
+use core\dbSingleton;
+
 /**
- * Création d'une statisque sur la base d'une requête
+ * Création d'une statisque sur la base d'une requête MySQL
+ *
+ * @author Daniel Gomes
  */
 class Stats_Sql extends Stats_Bases
 {
@@ -17,16 +21,16 @@ class Stats_Sql extends Stats_Bases
 	 *
 	 * 	array (
 	 * 		[intitule1] => 	array (
-     *								[label] => Intitulé 1
-     *								[graphOnLoad] =>				Affichage de cette donnée dans le graph au chargement ( true | false )
-     *								[graphColor] => #E10F1A			Couleur graphique + pastille intitulé ligne
-     *								[values] => Array
-     *									(
-	 *									[T1] => 24				Valeurs > interval de temps
+     *								[label] 		=> Intitulé 1
+     *								[graphOnLoad] 	=> Affichage de cette donnée dans le graph au chargement ( true | false )
+     *								[graphColor] 	=> #E10F1A			// Couleur graphique + pastille intitulé ligne
+     *								[values] 		=> Array(
+	 *									[T1] => 24						// Valeurs > interval de temps
      *									[T2] => 44
      *									...
-     *						)
-     * 	)
+     *		)
+     *		...
+     * 	);
 	 */
 	protected $data;
 
@@ -34,12 +38,14 @@ class Stats_Sql extends Stats_Bases
 	/**
 	 * $champs : Tableau avec le nom des champs ou leur Alias s'ils en ont un
 	 *
-	 * array (
-	 *											'nom_champ' = array (
-	 *													'label' 		=> '...',		( nom affiché )
-	 *													'graphOnLoad'	=> '...',		( true | false )
-	 *													'graphColor'	=> '...',		( #... code hexa )
-	 *											),
+	 * array(
+	 *		'nom_champ' = array (
+	 *						'label' 		=> '...',		// nom affiché
+	 *						'graphOnLoad'	=> '...',		// boolean : true | false
+	 *						'graphColor'	=> '...',		// code couleur hexa : #...
+	 *		),
+	 *		...
+	 *	);
 	 */
 	protected $champs;
 
@@ -47,8 +53,11 @@ class Stats_Sql extends Stats_Bases
 	protected $req;				// Requête
 	protected $reqCompar;		// Requête (comparaison)
 	protected $hydrateReq;		// Tableau facultatif : Permet de passer des valeurs supplémentaires à la close WHERE d'un requête
-								// 		Exemple : $hydrateReq = array(':chp1'=>$val1, ':chp2'=>$val2, ...)
-
+								// Exemple : $hydrateReq = array(
+								// 								':chp1'=>$val1,
+								// 								':chp2'=>$val2,
+								// 								...
+								// 			 );
 
 	protected $fieldsForm;		// Tableau facultatif : Mise en forme par défaut des colonnes ( align | unite | decimales )
 								// 		Exemple : $fieldsForm = array('align'=>'right', 'unite'=>'€', 'decimales'=> 2);
@@ -105,31 +114,33 @@ class Stats_Sql extends Stats_Bases
 
 	protected function getDefaultOptions()
 	{
-		return array_merge(parent::getDefaultOptions(), array(
-			'data' 				=> 	array(),
-			'champs'			=>	array(),
+		return array_merge(
+			parent::getDefaultOptions(),
+			array(
+				'data' 				=> array(),
+				'champs'			=> array(),
 
-			'bdd' 				=> 	'',
-			'req'				=>	'',
-			'hydrateReq'		=>	'',
+				'bdd' 				=> '',
+				'req'				=> '',
+				'hydrateReq'		=> '',
 
-			'fieldsForm'		=>	'',
+				'fieldsForm'		=> '',
 
-			'datedeb'			=>	'',
-			'datefin'			=>	'',
-			'heuredeb'			=>	'',
-			'heurefin'			=>	'',
+				'datedeb'			=> '',
+				'datefin'			=> '',
+				'heuredeb'			=> '',
+				'heurefin'			=> '',
 
-			'datedebCompar'		=>	'',
-			'datefinCompar'		=>	'',
-			'heuredebCompar'	=>	'',
-			'heurefinCompar'	=>	'',
+				'datedebCompar'		=> '',
+				'datefinCompar'		=> '',
+				'heuredebCompar'	=> '',
+				'heurefinCompar'	=> '',
 
-			'chpDate'			=>	'',
-			'chpDateType'		=>	'',
+				'chpDate'			=> '',
+				'chpDateType'		=> '',
 
-			'stepTimeline'		=>	'',
-			'stepActiv'			=>	array 	(
+				'stepTimeline'		=> '',
+				'stepActiv'			=> array(
 											'YEAR'		=> 'Années',
 											'MONTH'		=> 'Mois',
 											'WEEK'		=> 'Semaines',
@@ -141,13 +152,14 @@ class Stats_Sql extends Stats_Bases
 											'15'		=> '1/4 heures de la journée',
 											'10'		=> '1/6 heures de la journée (10 min)',
 											'5'			=> '1/12 heures de la journée (5 min)',
-											),
+				),
 
-			'dtpDeb'			=>	'',
-			'dtpFin'			=>	'',
-			'dtpDebCompar'		=>	'',
-			'dtpFinCompar'		=>	'',
-		));
+				'dtpDeb'			=> '',
+				'dtpFin'			=> '',
+				'dtpDebCompar'		=> '',
+				'dtpFinCompar'		=> '',
+			)
+		);
 	}
 
 
@@ -199,8 +211,16 @@ class Stats_Sql extends Stats_Bases
 	{
 		if (! empty($this->stepTimeline)) {
 
-			$plages 	= array('YEAR', 'MONTH', 'WEEK', 'WEEK_S', 'DAY', 'int_JOUR');
-			$intevals	= array('60', '30', '15', '10', '5');
+			$plages = array(
+				'YEAR',
+				'MONTH',
+				'WEEK',
+				'WEEK_S',
+				'DAY',
+				'int_JOUR'
+			);
+
+			$intevals = array('60', '30', '15', '10', '5');
 
 			if (in_array($this->stepTimeline, $plages)) {
 
@@ -214,7 +234,7 @@ class Stats_Sql extends Stats_Bases
 					case 'int_JOUR'	: $dateFormatType = '%w'; 			break;		// Jour de la semaine (0=dimanche, 6=samedi)
 				}
 
-				$plageOuInterval = "DATE_FORMAT(__chpDate__, '" . $dateFormatType . "') AS myInterval, ";
+				$plageOuInterval = "DATE_FORMAT( __chpDate__, '" . $dateFormatType . "') AS myInterval, ";
 			}
 
 			if (in_array($this->stepTimeline, $intevals)) {
@@ -225,7 +245,7 @@ class Stats_Sql extends Stats_Bases
 														(
 															(DATE_FORMAT(__chpDate__, '%H') * 60)
 															+
-															DATE_FORMAT(__chpDate__, '%i')
+															 DATE_FORMAT(__chpDate__, '%i')
 														)
 
 														/ " . $this->stepTimeline . "
@@ -250,10 +270,10 @@ class Stats_Sql extends Stats_Bases
 	 */
 	private function connectPDO()
 	{
-		if (! empty($this->bdd)) {
-			$this->pdo = \ZiCore_Db_Singleton::getInstance($this->bdd);
+		if (!empty($this->bdd)) {
+			$this->pdo = dbSingleton::getInstance($this->bdd);
 		} else {
-			$this->pdo = \ZiCore_Db_Singleton::getInstance();
+			$this->pdo = dbSingleton::getInstance();
 		}
 	}
 
@@ -268,6 +288,7 @@ class Stats_Sql extends Stats_Bases
 
 			if ($this->chpDateType == 'date') 		$this->datedeb 	= $_GET['dtp_deb'];
 			if ($this->chpDateType == 'time') 		$this->heuredeb = $_GET['dtp_deb'];
+
 			if ($this->chpDateType == 'datetime') {
 				$explodeDT = explode(" ", $_GET['dtp_deb']);
 				$this->datedeb 	= $explodeDT[0];
@@ -276,10 +297,12 @@ class Stats_Sql extends Stats_Bases
 		}
 
 		if (isset($_GET['dtp_fin'])) {
+
 			$this->dtpFin = $_GET['dtp_fin'];
 
 			if ($this->chpDateType == 'date') 		$this->datefin 	= $_GET['dtp_fin'];
 			if ($this->chpDateType == 'time') 		$this->heurefin = $_GET['dtp_fin'];
+
 			if ($this->chpDateType == 'datetime') {
 				$explodeDT = explode(" ", $_GET['dtp_fin']);
 				$this->datefin 	= $explodeDT[0];
@@ -290,10 +313,12 @@ class Stats_Sql extends Stats_Bases
 		if ($this->compar === true) {
 
 			if (isset($_GET['dtp_deb_compar'])) {
+
 				$this->dtpDebCompar = $_GET['dtp_deb_compar'];
 
 				if ($this->chpDateType == 'date') 	$this->datedebCompar 	= $_GET['dtp_deb_compar'];
 				if ($this->chpDateType == 'time') 	$this->heuredebCompar	= $_GET['dtp_deb_compar'];
+
 				if ($this->chpDateType == 'datetime') {
 					$explodeDT = explode(" ", $_GET['dtp_deb_compar']);
 					$this->datedebCompar	= $explodeDT[0];
@@ -302,10 +327,12 @@ class Stats_Sql extends Stats_Bases
 			}
 
 			if (isset($_GET['dtp_fin_compar'])) {
+
 				$this->dtpFinCompar = $_GET['dtp_fin_compar'];
 
 				if ($this->chpDateType == 'date') 	$this->datefinCompar	= $_GET['dtp_fin_compar'];
 				if ($this->chpDateType == 'time') 	$this->heurefinCompar	= $_GET['dtp_fin_compar'];
+
 				if ($this->chpDateType == 'datetime') {
 					$explodeDT = explode(" ", $_GET['dtp_fin_compar']);
 					$this->datefinCompar	= $explodeDT[0];
@@ -371,57 +398,66 @@ class Stats_Sql extends Stats_Bases
 		$resultCompar = array();
 
 		foreach ($reqlist as $reqDescription) {
+
 			//Il est possible de spécifier pour chaque requêtes le chpdate et chpDateType
 			if (is_array($reqDescription)) {
 
 				$req = $reqDescription[0];
 
-				if(!empty($reqDescription[1]))
-					$this->chpDate			= $reqDescription[1];
+				if (!empty($reqDescription[1])) {
+					$this->chpDate = $reqDescription[1];
+				}
 
-				if(!empty($reqDescription[2]))
-					$this->chpDateType			= $reqDescription[2];
+				if (!empty($reqDescription[2])) {
+					$this->chpDateType = $reqDescription[2];
+				}
 
-			}
-			else{
+			} else {
 				$req = $reqDescription;
 			}
 
 			// Remplacement du filtre par plage ou interval
-			$req = str_replace ("__plageOuInterval__", $this->dateFormatType(), $req);
+			$req = str_replace("__plageOuInterval__", $this->dateFormatType(), $req);
 
 			// Remplacement du champ date
-			$req = str_replace ("__chpDate__", $this->chpDate, $req);
+			$req = str_replace("__chpDate__", $this->chpDate, $req);
 
 			// Exécution de la requête
-			if(is_array($reqDescription) && !empty($reqDescription[3])){
-
+			if (is_array($reqDescription) && !empty($reqDescription[3])) {
 				$sql = $reqDescription[3]->prepare($req);
-			}
-			else{
+			} else {
 				$sql = $this->pdo->prepare($req);
 			}
 
 			$values = array(
-							':plageDeb' => $plageDeb,
-							':plageFin' => $plageFin,
-							);
+				':plageDeb' => $plageDeb,
+				':plageFin' => $plageFin,
+			);
 
-			$sql->execute(array_merge( $this->hydrateReq, $values ));
-
+			$sql->execute(
+				array_merge(
+					$this->hydrateReq,
+					$values
+				)
+			);
 
 			while ($res = $sql->fetch()) {
 
 				$res = get_object_vars($res);
-//CHM Recherche du bon indice
-				$i=0;
-				//Si c'est pas le premier on recherche si myInterval existe déjà
-				if(isset($result[$i]["myInterval"])){
-						while ($result[$i]["myInterval"]!=$res["myInterval"] && $i<(count($result)-1) )
-						 	 $i++;
 
-						if($result[$i]["myInterval"]!=$res["myInterval"])//Pas trouvée
-							$i++;
+				// CHM Recherche du bon indice
+				$i=0;
+
+				// Si c'est pas le premier on recherche si myInterval existe déjà
+				if (isset($result[$i]["myInterval"])) {
+
+					while ($result[$i]["myInterval"] != $res["myInterval"] && $i<(count($result)-1)) {
+						$i++;
+					}
+
+					if ($result[$i]["myInterval"]!=$res["myInterval"]) {
+						$i++;
+					}
 				}
 
 				if (isset($result[$i])) {
@@ -429,62 +465,60 @@ class Stats_Sql extends Stats_Bases
 				} else {
 					$result[$i] = $res;
 				}
-
-
 			}
 
-
-
 			// Exécution de la requête de comparaison
-			if ($this->compar === true && (! empty($this->dtpDebCompar)) && (! empty($this->dtpFinCompar))) {
+			if ($this->compar === true && (!empty($this->dtpDebCompar)) && (!empty($this->dtpFinCompar))) {
 
 				$this->reqCompar = $req;
 				$this->reqCompar = str_replace (":plageDeb", ":plageDebCompar", $this->reqCompar);
 				$this->reqCompar = str_replace (":plageFin", ":plageFinCompar", $this->reqCompar);
 
-
 				// Exécution de la requête
-				if(is_array($reqDescription) && !empty($reqDescription[3])){
+				if (is_array($reqDescription) && !empty($reqDescription[3])) {
 					$sqlCompar = $reqDescription[3]->prepare($this->reqCompar);
-				}
-				else{
+				} else {
 					$sqlCompar = $this->pdo->prepare($this->reqCompar);
 				}
 
-
 				$valuesCompar = array(
-								':plageDebCompar' => $plageDebCompar,
-								':plageFinCompar' => $plageFinCompar,
-								);
+					':plageDebCompar' => $plageDebCompar,
+					':plageFinCompar' => $plageFinCompar,
+				);
 
-				$sqlCompar->execute(array_merge( $this->hydrateReq, $valuesCompar ));
-
+				$sqlCompar->execute(
+					array_merge(
+						$this->hydrateReq,
+						$valuesCompar
+					)
+				);
 
 				while ($resCompar = $sqlCompar->fetch()) {
 
 					$resCompar = get_object_vars($resCompar);
 
+					// CHM Recherche du bon indice
+					$i=0;
 
-//CHM Recherche du bon indice
-						$i=0;
-						//Si c'est pas le premier on recherche si myInterval existe déjà
-						if(isset($resultCompar[$i]["myInterval"])){
-								while ($resultCompar[$i]["myInterval"]!=$resCompar["myInterval"] && $i<(count($resultCompar)-1) )
-								 	 $i++;
+					// Si c'est pas le premier on recherche si myInterval existe déjà
+					if (isset($resultCompar[$i]["myInterval"])) {
 
-								if($resultCompar[$i]["myInterval"]!=$resCompar["myInterval"])//Pas trouvée
-									$i++;
+						while ($resultCompar[$i]["myInterval"]!=$resCompar["myInterval"] && $i<(count($resultCompar)-1)) {
+							$i++;
 						}
+
+						// Pas trouvée
+						if ($resultCompar[$i]["myInterval"]!=$resCompar["myInterval"]) {
+							$i++;
+						}
+					}
 
 					if (isset($resultCompar[$i])) {
 						$resultCompar[$i] = array_merge($resultCompar[$i], $resCompar);
 					} else {
 						$resultCompar[$i] = $resCompar;
 					}
-
-
 				}
-
 			}
 
 			// Chargement des colonnes
@@ -492,13 +526,13 @@ class Stats_Sql extends Stats_Bases
 				$this->fields[$v['myInterval']] = array_merge(
 															array('label' => $v['myInterval']),
 															$this->fieldsForm
-															);
+				);
 			}
 		}
 
-		//CHM
-		$result=$this->postResult($result);
-		$resultCompar=$this->postResultCompar($resultCompar);
+		// CHM
+		$result 	  = $this->postResult($result);
+		$resultCompar = $this->postResultCompar($resultCompar);
 
 		// Chargement des datas
 		$line = 0;
@@ -514,14 +548,13 @@ class Stats_Sql extends Stats_Bases
 				$this->data[$line]['graphOnLoad'] 	= $v['graphOnLoad'];
 				$this->data[$line]['graphColor'] 	= $v['graphColor'];
 
-
-					if(!empty($v['graphYAxis']))
+				if (!empty($v['graphYAxis'])) {
 					$this->data[$line]['graphYAxis']	= $v['graphYAxis'];
+				}
 
-				if(!empty($v['graphType']))
-				$this->data[$line]['graphType']	= $v['graphType'];
-
-
+				if (!empty($v['graphType'])) {
+					$this->data[$line]['graphType']	= $v['graphType'];
+				}
 			}
 
 			if (isset($v['group'])  &&  $v['group'] === true) {
@@ -562,7 +595,6 @@ class Stats_Sql extends Stats_Bases
 					$resN[] = 0;
 					$this->data[$line]['values'][$v2['myInterval']] = 0;
 				}
-
 			}
 
 			// Lignes de comparaison
@@ -605,6 +637,7 @@ class Stats_Sql extends Stats_Bases
 				}
 
 				$j=0;
+
 				for ($l=0; $l<count($result); $l++) {
 
 					if (isset($resultCompar[$l]) && isset($resultCompar[$l][$k])) { //CHM & & isset($resultCompar[$l][$k])
@@ -645,10 +678,10 @@ class Stats_Sql extends Stats_Bases
 		$colorHexaB = substr($colorHexa,5,2);
 
 		$colorsDec = array(
-						'R'=>hexdec($colorHexaR),
-						'V'=>hexdec($colorHexaV),
-						'B'=>hexdec($colorHexaB),
-					 );
+			'R'=>hexdec($colorHexaR),
+			'V'=>hexdec($colorHexaV),
+			'B'=>hexdec($colorHexaB),
+		 );
 
 		foreach ($colorsDec as $k => $v) {
 			if ($v > 50) {
@@ -684,92 +717,98 @@ class Stats_Sql extends Stats_Bases
 		$pageCourante = $_SERVER['PHP_SELF'];
 
 		$js = <<<eof
-$(function () {
-	// Gestion liée des deux dateTimePicker
-    $('#dtp_deb').datetimepicker({
-		format: '{$this->formatDateTimePicker()}'
-	});
-    $('#dtp_fin').datetimepicker({
-		format: '{$this->formatDateTimePicker()}',
-        useCurrent: false //Important! See issue #1075
-    });
-    $("#dtp_deb").on("dp.change", function (e) {
-        $('#dtp_fin').data("DateTimePicker").minDate(e.date);
-    });
-    $("#dtp_fin").on("dp.change", function (e) {
-        $('#dtp_deb').data("DateTimePicker").maxDate(e.date);
-    });
+			$(function () {
+				// Gestion liée des deux dateTimePicker
+			    $('#dtp_deb').datetimepicker({
+					format: '{$this->formatDateTimePicker()}'
+				});
+			    $('#dtp_fin').datetimepicker({
+					format: '{$this->formatDateTimePicker()}',
+			        useCurrent: false //Important! See issue #1075
+			    });
+			    $("#dtp_deb").on("dp.change", function (e) {
+			        $('#dtp_fin').data("DateTimePicker").minDate(e.date);
+			    });
+			    $("#dtp_fin").on("dp.change", function (e) {
+			        $('#dtp_deb').data("DateTimePicker").maxDate(e.date);
+			    });
 
-	// Affichage amélioré du select
-	// $('#stepTimeline').selectpicker();
-});
+				// Affichage amélioré du select
+				// $('#stepTimeline').selectpicker();
+			});
 eof;
-		$this->addJs($js);
+
+		$this->js .= $js;
+
 
 		// Choix des intervals de temps
 		$options = array();
+
 		foreach ($this->stepActiv as $k=>$v) {
+
 			if ($k == $this->stepTimeline) {
 				$selected = ' selected';
 			} else {
 				$selected = '';
 			}
+
 			$options[] = '<option value="' . $k . '"'.$selected.'>' . $v . '</option>';
 		}
+
 		$options = implode(chr(10), $options);
 
 		$placeholder = ' de la période';
 
 		// Code des champs et des boutons de recherche
 		$html = <<<eof
-		<div class="container-fluid" style="padding:0;">
+			<div class="container-fluid" style="padding:0;">
 
-			<form method="get">
+				<form method="get">
 
-			<div class="col-lg-12" style="padding:0; margin:0; margin-bottom:7px; color:#777;">
-				{$this->affLinkNormal()}
-				<div style="display:inline-block; padding:0 5px;">|</div>
-				{$this->affLinkCompar()}
-				{$this->htmlEndLink}
-			</div>
-
-
-				<div class="col-lg-12" style="padding:0;">
-				    <div class="col-lg-2" style="padding:0;">
-				        <div class="form-group" style="margin-bottom:5px;">
-				            <div class="input-group date" id="dtp_deb">
-				                <input type="text" name="dtp_deb" id="dtp_deb_id" class="form-control" style="height:34px;" value="{$this->dtpDeb}" placeholder="Début $placeholder" required>
-				                <span class="input-group-addon">
-				                    <span class="glyphicon glyphicon-calendar"></span>
-				                </span>
-				            </div>
-				        </div>
-				    </div>
-				    <div class="col-lg-2" style="padding:0; margin-left:5px;">
-				        <div class="form-group" style="margin-bottom:5px;">
-				            <div class="input-group date" id="dtp_fin">
-				                <input type="text" name="dtp_fin" id="dtp_fin_id" class="form-control" style="height:34px;" value="{$this->dtpFin}" placeholder="Fin $placeholder" required>
-				                <span class="input-group-addon">
-				                    <span class="glyphicon glyphicon-calendar"></span>
-				                </span>
-				            </div>
-				        </div>
-				    </div>
-					<div class="col-lg-2" style="padding:0; margin-left:5px;">
-						<select name="stepTimeline" id="stepTimeline" class="form-control" required>
-							<option value="">-- Intervals --</option>
-							$options
-						</select>
-					</div>
-					<div class="col-lg-5" style="padding:0; margin-left:5px;">
-						<button type="submit" class="btn btn-primary" data-tooltip="true" title="test">Envoyer</button>
-					</div>
+				<div class="col-lg-12" style="padding:0; margin:0; margin-bottom:7px; color:#777;">
+					{$this->affLinkNormal()}
+					<div style="display:inline-block; padding:0 5px;">|</div>
+					{$this->affLinkCompar()}
+					{$this->htmlEndLink}
 				</div>
 
-				{$this->htmlCompar}
-				{$this->htmlEndForm}
-			</form>
-		</div>
+
+					<div class="col-lg-12" style="padding:0;">
+					    <div class="col-lg-2" style="padding:0;">
+					        <div class="form-group" style="margin-bottom:5px;">
+					            <div class="input-group date" id="dtp_deb">
+					                <input type="text" name="dtp_deb" id="dtp_deb_id" class="form-control" style="height:34px;" value="{$this->dtpDeb}" placeholder="Début $placeholder" required>
+					                <span class="input-group-addon">
+					                    <span class="glyphicon glyphicon-calendar"></span>
+					                </span>
+					            </div>
+					        </div>
+					    </div>
+					    <div class="col-lg-2" style="padding:0; margin-left:5px;">
+					        <div class="form-group" style="margin-bottom:5px;">
+					            <div class="input-group date" id="dtp_fin">
+					                <input type="text" name="dtp_fin" id="dtp_fin_id" class="form-control" style="height:34px;" value="{$this->dtpFin}" placeholder="Fin $placeholder" required>
+					                <span class="input-group-addon">
+					                    <span class="glyphicon glyphicon-calendar"></span>
+					                </span>
+					            </div>
+					        </div>
+					    </div>
+						<div class="col-lg-2" style="padding:0; margin-left:5px;">
+							<select name="stepTimeline" id="stepTimeline" class="form-control" required>
+								<option value="">-- Intervals --</option>
+								$options
+							</select>
+						</div>
+						<div class="col-lg-5" style="padding:0; margin-left:5px;">
+							<button type="submit" class="btn btn-primary" data-tooltip="true" title="test">Envoyer</button>
+						</div>
+					</div>
+
+					{$this->htmlCompar}
+					{$this->htmlEndForm}
+				</form>
+			</div>
 eof;
 
 	return $html;
@@ -788,51 +827,51 @@ eof;
 
 			// Code HTML de Comparaison
 			$this->htmlCompar = <<<eof
-			<input type="hidden" name="compar" value="1">
-			<div id="datePickerCompar_id" class="col-lg-12" style="padding:0;">
-				<div class="col-lg-2" style="padding:0;">
-					<div class="form-group">
-						<div class="input-group date" id="dtp_deb_compar">
-							<input type="text" name="dtp_deb_compar" id="dtp_deb_id_compar" class="form-control" style="height:34px;" value="{$this->dtpDebCompar}" placeholder="Début $placeholder" required>
-							<span class="input-group-addon">
-								<span class="glyphicon glyphicon-calendar"></span>
-							</span>
+				<input type="hidden" name="compar" value="1">
+				<div id="datePickerCompar_id" class="col-lg-12" style="padding:0;">
+					<div class="col-lg-2" style="padding:0;">
+						<div class="form-group">
+							<div class="input-group date" id="dtp_deb_compar">
+								<input type="text" name="dtp_deb_compar" id="dtp_deb_id_compar" class="form-control" style="height:34px;" value="{$this->dtpDebCompar}" placeholder="Début $placeholder" required>
+								<span class="input-group-addon">
+									<span class="glyphicon glyphicon-calendar"></span>
+								</span>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div class="col-lg-2" style="padding:0; margin-left:5px;">
-					<div class="form-group">
-						<div class="input-group date" id="dtp_fin_compar">
-							<input type="text" name="dtp_fin_compar" id="dtp_fin_id_compar" class="form-control" style="height:34px;" value="{$this->dtpFinCompar}" placeholder="Fin $placeholder" required>
-							<span class="input-group-addon">
-								<span class="glyphicon glyphicon-calendar"></span>
-							</span>
+					<div class="col-lg-2" style="padding:0; margin-left:5px;">
+						<div class="form-group">
+							<div class="input-group date" id="dtp_fin_compar">
+								<input type="text" name="dtp_fin_compar" id="dtp_fin_id_compar" class="form-control" style="height:34px;" value="{$this->dtpFinCompar}" placeholder="Fin $placeholder" required>
+								<span class="input-group-addon">
+									<span class="glyphicon glyphicon-calendar"></span>
+								</span>
+							</div>
 						</div>
 					</div>
-				</div>
 			</div>
 eof;
 
 			$js = <<<eof
-			$(function () {
-				// Gestion liée des deux dateTimePicker
-				$('#dtp_deb_compar').datetimepicker({
-					format: '{$this->formatDateTimePicker()}'
-				});
-				$('#dtp_fin_compar').datetimepicker({
-					format: '{$this->formatDateTimePicker()}',
-					useCurrent: false //Important! See issue #1075
-				});
-				$("#dtp_deb_compar").on("dp.change", function (e) {
-					$('#dtp_fin_compar').data("DateTimePicker").minDate(e.date);
-				});
-				$("#dtp_fin_compar").on("dp.change", function (e) {
-					$('#dtp_deb_compar').data("DateTimePicker").maxDate(e.date);
-				});
+				$(function () {
+					// Gestion liée des deux dateTimePicker
+					$('#dtp_deb_compar').datetimepicker({
+						format: '{$this->formatDateTimePicker()}'
+					});
+					$('#dtp_fin_compar').datetimepicker({
+						format: '{$this->formatDateTimePicker()}',
+						useCurrent: false //Important! See issue #1075
+					});
+					$("#dtp_deb_compar").on("dp.change", function (e) {
+						$('#dtp_fin_compar').data("DateTimePicker").minDate(e.date);
+					});
+					$("#dtp_fin_compar").on("dp.change", function (e) {
+						$('#dtp_deb_compar').data("DateTimePicker").maxDate(e.date);
+					});
 
-				// Affichage amélioré du select
-				// $('#stepTimeline').selectpicker();
-			});
+					// Affichage amélioré du select
+					// $('#stepTimeline').selectpicker();
+				});
 eof;
 			$this->addJs($js);
 
