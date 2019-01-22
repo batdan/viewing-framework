@@ -414,8 +414,11 @@ class libIncluderList extends libIncluder
     {
         self::add_jQuery_V3();
 
-        $js     = array("/vendor/vw/framework/libExt/js/Highcharts/js/highcharts.js",
-                        "/vendor/vw/framework/libExt/js/Highcharts/js/modules/exporting.js");
+        // $js     = array("/vendor/vw/framework/libExt/js/Highcharts/js/highcharts.js",
+        //                 "/vendor/vw/framework/libExt/js/Highcharts/js/modules/exporting.js");
+
+        $js     = array("/vendor/vw/framework/libExt/js/Highcharts-7.0.2/code/highcharts.js",
+                        "/vendor/vw/framework/libExt/js/Highcharts-7.0.2/code/modules/exporting.js");
 
         parent::add_JsLib($js, $optimize);
     }

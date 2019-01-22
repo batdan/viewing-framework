@@ -429,6 +429,8 @@ class Stats_Sql extends Stats_Bases
 				$sql = $this->pdo->prepare($req);
 			}
 
+			// echo $req;
+
 			$values = array(
 				':plageDeb' => $plageDeb,
 				':plageFin' => $plageFin,
@@ -523,9 +525,9 @@ class Stats_Sql extends Stats_Bases
 
 			// Chargement des colonnes
 			foreach ($result as $k=>$v) {
-				$this->fields[$v['myInterval']] = array_merge(
-															array('label' => $v['myInterval']),
-															$this->fieldsForm
+				$this->libelle[$v['myInterval']] = array_merge(
+					array('label' => $v['myInterval']),
+					$this->fieldsForm
 				);
 			}
 		}
@@ -657,14 +659,12 @@ class Stats_Sql extends Stats_Bases
 			$line++;
 		}
 
-		/*
-		echo '<pre>';
-		//print_r($res);				// Résultats de la requête
-		//print_r($this->champs);		// Liste des champs
-		//print_r($this->fields);		// Liste des colonnes
-		print_r($this->data);			// Tableau de données formatés
-		echo '</pre>';
-		*/
+		// echo '<pre>';
+		// 	//print_r($res);				// Résultats de la requête
+		// 	// print_r($this->champs);		// Liste des champs
+		// 	// print_r($this->libelle);		// Liste des colonnes
+		// 	print_r($this->data);			// Tableau de données formatés
+		// echo '</pre>';
 	}
 
 
@@ -801,7 +801,7 @@ eof;
 							</select>
 						</div>
 						<div class="col-lg-5" style="padding:0; margin-left:5px;">
-							<button type="submit" class="btn btn-primary" data-tooltip="true" title="test">Envoyer</button>
+							<button type="submit" class="btn btn-primary" data-tooltip="true">Envoyer</button>
 						</div>
 					</div>
 
@@ -933,7 +933,7 @@ eof;
 
 			if (count($url) > 1  &&  $url[1] != '') {
 
-				$get  = explode('&', $url[1]);
+				$get = explode('&', $url[1]);
 
 				if (! in_array('compar', $get)) {
 					$get[] = 'compar=1';

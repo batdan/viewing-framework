@@ -31,7 +31,7 @@ class Stats_Bases
 	/**
 	 * @var array
 	 */
-	protected $fields;
+	protected $libelle;
 
 	/**
 	 * Fonction javascript de callback permettant de changer les styles des lignes
@@ -203,7 +203,7 @@ class Stats_Bases
 		return array(
 			'id' 				=> md5($_SERVER['PHP_SELF']),
 			'url' 				=> $_SERVER['REQUEST_URI'],
-			'fields' 			=> array(),
+			'libelle' 			=> array(),
 			'rowStyle' 			=> null,
 			'width' 			=> '1000px',
 			'title' 			=> '',
@@ -238,18 +238,18 @@ class Stats_Bases
 	 */
 	public function getDefaultOptionsFields()
 	{
-		foreach ($this->fields as $k => $v) {
+		foreach ($this->libelle as $k => $v) {
 			if (empty($v['label'])) {
-				$this->fields[$k]['label'] = $k;
+				$this->libelle[$k]['label'] = $k;
 			}
 			if (empty($v['align'])) {
-				$this->fields[$k]['align'] = 'right';
+				$this->libelle[$k]['align'] = 'right';
 			}
 			if (empty($v['unite'])) {
-				$this->fields[$k]['unite'] = null;
+				$this->libelle[$k]['unite'] = null;
 			}
 			if (empty($v['decimales'])) {
-				$this->fields[$k]['decimales'] = 0;
+				$this->libelle[$k]['decimales'] = 0;
 			}
 		}
 	}
@@ -263,7 +263,7 @@ class Stats_Bases
 	protected function initOptions($options)
 	{
 		$this->id 				= $options['id'];
-		$this->fields 			= $options['fields'];
+		$this->libelle 			= $options['libelle'];
 		$this->rowStyle 		= $options['rowStyle'];
 		$this->width 			= $options['width'];
 		$this->title 			= $options['title'];
@@ -574,7 +574,7 @@ eof;
 	{
 		$dataChartFields = array();
 
-		foreach ($this->fields as $k => $v) {
+		foreach ($this->libelle as $k => $v) {
 			$dataChartFields[] = $k;
 		}
 
@@ -648,7 +648,7 @@ eof;
 		$html.= '<th align="left" style="'.$borderBottom.'">Libellés</th>' . chr(10);
 
 		// Affichage des champsLDATEDEB
-		foreach ($this->fields as $k => $v) {
+		foreach ($this->libelle as $k => $v) {
 			$attrs = array();
 			$label = null;
 
@@ -838,7 +838,7 @@ eof;
 
 				//////////////////////////////////////////////////////////////////////////////////////////
 				// Affichage de la ligne
-				if (is_array($this->fields[$k_chp])) {
+				if (is_array($this->libelle[$k_chp])) {
 
 					$style 	= array();
 
@@ -849,16 +849,16 @@ eof;
 					$divTitleFin = '';
 
 					// Largeur de colonne
-					if (! empty($this->fields[$k_chp]['width'])) {
-						$style[] = 'width:'.$this->fields[$k_chp]['width'].';';
+					if (! empty($this->libelle[$k_chp]['width'])) {
+						$style[] = 'width:'.$this->libelle[$k_chp]['width'].';';
 					}
 
 					// Alignement d'une valeur
 					if (! empty($v_line['align'])) {
 						$style[] = 'text-align:'.$v_line['align'].';';
 					} else {
-						if (! empty($this->fields[$k_chp]['align'])) {
-							$style[] = 'text-align:'.$this->fields[$k_chp]['align'].';';
+						if (! empty($this->libelle[$k_chp]['align'])) {
+							$style[] = 'text-align:'.$this->libelle[$k_chp]['align'].';';
 						} else {
 							$style[] = 'text-align:right;';
 						}
@@ -870,8 +870,8 @@ eof;
 							$unite = '&nbsp;'.$v_line['unite'];
 						}
 					} else {
-						if (! empty($this->fields[$k_chp]['unite'])) {
-							$unite = '&nbsp;'.$this->fields[$k_chp]['unite'];
+						if (! empty($this->libelle[$k_chp]['unite'])) {
+							$unite = '&nbsp;'.$this->libelle[$k_chp]['unite'];
 						}
 					}
 
@@ -880,9 +880,9 @@ eof;
 						$value = number_format($value, $v_line['decimales'], '.', '&nbsp;');
 						$decimales = $v_line['decimales'];
 					} else {
-						if (! empty($this->fields[$k_chp]['decimales'])) {
-							$value = number_format($value, $this->fields[$k_chp]['decimales'], '.', '&nbsp;');
-							$decimales = $this->fields[$k_chp]['decimales'];
+						if (! empty($this->libelle[$k_chp]['decimales'])) {
+							$value = number_format($value, $this->libelle[$k_chp]['decimales'], '.', '&nbsp;');
+							$decimales = $this->libelle[$k_chp]['decimales'];
 						}
 					}
 
@@ -1124,7 +1124,7 @@ eof;
 		$html .= '<td style="background:#fff;" class="intitule">' . str_replace(" ", "&nbsp;",$this->ligneTotauxConf['libelle']) . '</td>' . chr(10);
 
 		// Tableau des champs, totaux des lignes inclus pour l'alignement et la couleur des champs
-		$listeChp = array_merge($this->fields, $this->results_line);
+		$listeChp = array_merge($this->libelle, $this->results_line);
 
 		foreach ($this->columnsValue['normal'] as $k=>$v) {
 
@@ -1186,7 +1186,7 @@ eof;
 			$html .= '<td style="background:#efefef;" class="intitule">' . str_replace(" ", "&nbsp;",$this->ligneTotauxConf['libelle']) . ' N-1</td>' . chr(10);
 
 			// Tableau des champs, totaux des lignes inclus pour l'alignement et la couleur des champs
-			$listeChp = array_merge($this->fields, $this->results_line);
+			$listeChp = array_merge($this->libelle, $this->results_line);
 
 			foreach ($this->columnsValue['compar'] as $k=>$v) {
 
