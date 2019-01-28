@@ -1,6 +1,7 @@
 <?php
 namespace vw\plotTime;
 
+use core\libIncluder;
 use core\dbSingleton;
 
 /**
@@ -284,15 +285,24 @@ class Stats_Sql extends Stats_Bases
 	private function checkGET()
 	{
 		if (isset($_GET['dtp_deb'])) {
+
 			$this->dtpDeb = $_GET['dtp_deb'];
 
-			if ($this->chpDateType == 'date') 		$this->datedeb 	= $_GET['dtp_deb'];
-			if ($this->chpDateType == 'time') 		$this->heuredeb = $_GET['dtp_deb'];
+			switch ($this->chpDateType)
+			{
+				case 'date' :
+					$this->datedeb 	= $_GET['dtp_deb'];
+					break;
 
-			if ($this->chpDateType == 'datetime') {
-				$explodeDT = explode(" ", $_GET['dtp_deb']);
-				$this->datedeb 	= $explodeDT[0];
-				$this->heuredeb = $explodeDT[1];
+				case 'time' :
+					$this->heuredeb = $_GET['dtp_deb'];
+					break;
+
+				case 'datetime' :
+					$explodeDT = explode(" ", $_GET['dtp_deb']);
+					$this->datedeb 	= $explodeDT[0];
+					$this->heuredeb = $explodeDT[1];
+					break;
 			}
 		}
 
@@ -300,13 +310,24 @@ class Stats_Sql extends Stats_Bases
 
 			$this->dtpFin = $_GET['dtp_fin'];
 
-			if ($this->chpDateType == 'date') 		$this->datefin 	= $_GET['dtp_fin'];
-			if ($this->chpDateType == 'time') 		$this->heurefin = $_GET['dtp_fin'];
+			switch ($this->chpDateType)
+			{
+				case 'date' :
+					// Ajoute d'un jour à la date de fin pour que la date demandée soit incluse
+					$d = new \DateTime($_GET['dtp_fin']);
+					$d->modify('+1 day');
+					$this->datefin 	= $d->format('Y-m-d');
+					break;
 
-			if ($this->chpDateType == 'datetime') {
-				$explodeDT = explode(" ", $_GET['dtp_fin']);
-				$this->datefin 	= $explodeDT[0];
-				$this->heurefin = $explodeDT[1];
+				case 'time' :
+					$this->heurefin = $_GET['dtp_fin'];
+					break;
+
+				case 'datetime' :
+					$explodeDT = explode(" ", $_GET['dtp_fin']);
+					$this->datefin 	= $explodeDT[0];
+					$this->heurefin = $explodeDT[1];
+					break;
 			}
 		}
 
@@ -717,28 +738,26 @@ class Stats_Sql extends Stats_Bases
 		$pageCourante = $_SERVER['PHP_SELF'];
 
 		$js = <<<eof
-			$(function () {
-				// Gestion liée des deux dateTimePicker
-			    $('#dtp_deb').datetimepicker({
-					format: '{$this->formatDateTimePicker()}'
-				});
-			    $('#dtp_fin').datetimepicker({
-					format: '{$this->formatDateTimePicker()}',
-			        useCurrent: false //Important! See issue #1075
-			    });
-			    $("#dtp_deb").on("dp.change", function (e) {
-			        $('#dtp_fin').data("DateTimePicker").minDate(e.date);
-			    });
-			    $("#dtp_fin").on("dp.change", function (e) {
-			        $('#dtp_deb').data("DateTimePicker").maxDate(e.date);
-			    });
-
-				// Affichage amélioré du select
-				// $('#stepTimeline').selectpicker();
+			// Gestion liée des deux dateTimePicker
+		    $('#dtp_deb').datetimepicker({
+				format: '{$this->formatDateTimePicker()}'
 			});
+		    $('#dtp_fin').datetimepicker({
+				format: '{$this->formatDateTimePicker()}',
+		        useCurrent: false //Important! See issue #1075
+		    });
+		    $("#dtp_deb").on("dp.change", function (e) {
+		        $('#dtp_fin').data("DateTimePicker").minDate(e.date);
+		    });
+		    $("#dtp_fin").on("dp.change", function (e) {
+		        $('#dtp_deb').data("DateTimePicker").maxDate(e.date);
+		    });
+
+			// Affichage amélioré du select
+			// $('#stepTimeline').selectpicker();
 eof;
 
-		$this->js .= $js;
+		libIncluder::add_JsScript($js, false);
 
 
 		// Choix des intervals de temps
@@ -765,18 +784,17 @@ eof;
 
 				<form method="get">
 
-				<div class="col-lg-12" style="padding:0; margin:0; margin-bottom:7px; color:#777;">
-					{$this->affLinkNormal()}
-					<div style="display:inline-block; padding:0 5px;">|</div>
-					{$this->affLinkCompar()}
-					{$this->htmlEndLink}
-				</div>
-
+					<div class="col-lg-12" style="padding:0; margin:0; margin-bottom:7px; color:#777;">
+						{$this->affLinkNormal()}
+						<div style="display:inline-block; padding:0 5px;">|</div>
+						{$this->affLinkCompar()}
+						{$this->htmlEndLink}
+					</div>
 
 					<div class="col-lg-12" style="padding:0;">
 					    <div class="col-lg-2" style="padding:0;">
 					        <div class="form-group" style="margin-bottom:5px;">
-					            <div class="input-group date" id="dtp_deb">
+					            <div class="input-group date" id="dtp_deb" role="datetimepicker">
 					                <input type="text" name="dtp_deb" id="dtp_deb_id" class="form-control" style="height:34px;" value="{$this->dtpDeb}" placeholder="Début $placeholder" required>
 					                <span class="input-group-addon">
 					                    <span class="glyphicon glyphicon-calendar"></span>
@@ -873,7 +891,8 @@ eof;
 					// $('#stepTimeline').selectpicker();
 				});
 eof;
-			$this->addJs($js);
+
+			libIncluder::add_JsScript($js);
 
 		} else {
 			$this->htmlCompar = '';

@@ -107,7 +107,6 @@ class Stats_Bases
         //         ->addInlineScript($js);
         // });
 
-		libIncluderList::add_bootstrapTable();
 		libIncluderList::add_bootstrapSelect();
 		libIncluderList::add_bootstrapDatetimepicker();
 		libIncluderList::add_highCharts();
@@ -127,8 +126,7 @@ class Stats_Bases
 		// $js = '';
 
 		if ($this->graph) {
-			$this->js .= $this->dataChartJs();
-			$this->addJs();
+			libIncluder::add_JsScript($this->dataChartJs());
 		}
 	}
 
