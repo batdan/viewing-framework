@@ -94,36 +94,17 @@ class Stats_Bases
 		$options = array_merge($this->getDefaultOptions(), $options);
         $this->initOptions($options);
 
-		// $this->js = '';
-
 		// Valeur par défaut des champs de la time line : fields
-		//$this->getDefaultOptionsFields();
+		$this->getDefaultOptionsFields();
 
         $this->action = $this->getParam($this->getUrlKey(), 'display');
-
-        // $this->setJsIncludeCallback(function($js) {
-        //     \ZiIncluder::getInstance()
-        //         ->getIncludeManager()
-        //         ->addInlineScript($js);
-        // });
 
 		libIncluderList::add_bootstrapSelect();
 		libIncluderList::add_bootstrapDatetimepicker();
 		libIncluderList::add_highCharts();
 
 		libIncluder::add_CssLib("/vendor/vw/framework/lib/plotTime/css/plotTime.css");
-
 		libIncluder::add_JsScript("$('[data-tooltip]').tooltip();");
-
-        // \ZiIncluder::getInstance()
-        // 		->loadBootstrapTable()
-		// 		->loadBootstrapSelect()
-		// 		->loadBootstrapDateTimePicker()
-        // 		->loadPlotTime();
-		//
-		// \ZiIncluder::getInstance()->getIncludeManager()->addInlineScript("$('[data-tooltip]').tooltip();");
-
-		// $js = '';
 
 		if ($this->graph) {
 			libIncluder::add_JsScript($this->dataChartJs());

@@ -754,7 +754,7 @@ class Stats_Sql extends Stats_Bases
 		    });
 
 			// Affichage amélioré du select
-			// $('#stepTimeline').selectpicker();
+			$('#stepTimeline').selectpicker();
 eof;
 
 		libIncluder::add_JsScript($js, false);
