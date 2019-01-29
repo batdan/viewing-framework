@@ -778,11 +778,32 @@ eof;
 
 		$placeholder = ' de la période';
 
+		// Récupération des GET de la page hors script
+		$inputPlotTime = array(
+			'dtp_deb',
+			'dtp_fin',
+			'dtp_deb_compar',
+			'dtp_fin_compar',
+			'stepTimeline',
+		);
+
+		$addHiddenInput = array();
+		foreach($_GET as $name => $value) {
+
+			if (!in_array($k, $inputPlotTime)) {
+				$addHiddenInput = '<input type="hidden" name="'.$name.'" value="'.$value.'">';
+			}
+
+			$addHiddenInput = implode(chr(10), $addHiddenInput);
+		}
+
 		// Code des champs et des boutons de recherche
 		$html = <<<eof
 			<div class="container-fluid" style="padding:0;">
 
 				<form method="get">
+
+					$addHiddenInput
 
 					<div class="col-lg-12" style="padding:0; margin:0; margin-bottom:7px; color:#777;">
 						{$this->affLinkNormal()}
