@@ -789,13 +789,12 @@ eof;
 
 		$addHiddenInput = array();
 		foreach($_GET as $name => $value) {
-
-			if (!in_array($k, $inputPlotTime)) {
-				$addHiddenInput = '<input type="hidden" name="'.$name.'" value="'.$value.'">';
+			if (!in_array($name, $inputPlotTime)) {
+				$addHiddenInput[] = '<input type="hidden" name="'.$name.'" value="'.$value.'">';
 			}
-
-			$addHiddenInput = implode(chr(10), $addHiddenInput);
 		}
+
+		$addHiddenInput = implode('', $addHiddenInput);
 
 		// Code des champs et des boutons de recherche
 		$html = <<<eof
