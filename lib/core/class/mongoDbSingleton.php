@@ -1,6 +1,8 @@
 <?php
 namespace core;
 
+use MongoDB\Client as Mongo;
+
 /**
  * Connexion aux bases de données MongoDb
  *
