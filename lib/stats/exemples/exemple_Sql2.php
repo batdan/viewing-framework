@@ -177,7 +177,7 @@ $grid = new sqlDb(array(
 );
 
 $grid->addBreadcrumb(array(
-	'label'	=> 'Test de breadcrump ZiPlotTime',
+	'label'	=> 'Test de breadcrump du module de stats',
 	'url' 	=> '/test2.php'
 ))->addBreadcrumb(array(
 	'label'	=> 'Test suite',

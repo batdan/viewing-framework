@@ -1,6 +1,8 @@
 <?php
 namespace vw\stats;
 
+use core\libIncluder;
+
 /**
  * Rendu HTML
  *
@@ -9,7 +11,7 @@ namespace vw\stats;
 class renderer
 {
 	/**
-	 * @var ZiGrid_Base
+	 * @var base
 	 */
 	protected $grid;
 
@@ -33,16 +35,18 @@ class renderer
 		$title = $this->grid->getTitle();
 
 		if (!empty($title)) {
-			$jsonTitle = json_encode(array('command'=>'setTitle', 'title'=>$title));
 
 			$js = <<<eof
 				(function($) {
 				    $(function() {
-				        ZiFramework.parentMessage($jsonTitle);
+						$('title').html('$title')
 				    });
 				})(jQuery);
 eof;
+
+			libIncluder::add_JsScript($js);
 		}
+
 
 		return $this->grid->render();
 	}

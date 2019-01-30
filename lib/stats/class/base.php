@@ -103,7 +103,7 @@ class base
 		libIncluderList::add_bootstrapDatetimepicker();
 		libIncluderList::add_highCharts();
 
-		libIncluder::add_CssLib("/vendor/vw/framework/lib/plotTime/css/plotTime.css");
+		libIncluder::add_CssLib("/vendor/vw/framework/lib/stats/css/stats.css");
 		libIncluder::add_JsScript("$('[data-tooltip]').tooltip();");
 
 		if ($this->graph) {

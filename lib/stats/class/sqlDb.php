@@ -759,7 +759,7 @@ class sqlDb extends base
 			});
 eof;
 
-		libIncluder::add_JsScript($js, false);
+		libIncluder::add_JsScript($js);
 
 
 		// Choix des intervals de temps
@@ -781,7 +781,7 @@ eof;
 		$placeholder = ' de la période';
 
 		// Récupération des GET de la page hors script
-		$inputPlotTime = array(
+		$inputStats = array(
 			'dtp_deb',
 			'dtp_fin',
 			'dtp_deb_compar',
@@ -791,7 +791,7 @@ eof;
 
 		$addHiddenInput = array();
 		foreach($_GET as $name => $value) {
-			if (!in_array($name, $inputPlotTime)) {
+			if (!in_array($name, $inputStats)) {
 				$addHiddenInput[] = '<input type="hidden" name="'.$name.'" value="'.$value.'">';
 			}
 		}
