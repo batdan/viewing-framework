@@ -27,16 +27,7 @@ class mongoDbSingleton
 	        // $dateTime       = new \DateTime("now", $dateTimeZone);
 	        // $gmt = '+0' . ($dateTimeZone->getOffset($dateTime) / 3600) . ':00';
 
-			// Connexion à la base de données
-			$mongo = config::getConfig('mongo');
-
-			$mongoHost = $mongo[$name]['mongoHost'];
-			$mongoUser = $mongo[$name]['mongoUser'];
-			$mongoPass = $mongo[$name]['mongoPass'];
-			$mongoPort = $mongo[$name]['mongoPort'];
-
 			// $charset = $db[$name]['charset'];
-
 
 			try {
 				// Récupération de la configuration de connexion MongoDb
