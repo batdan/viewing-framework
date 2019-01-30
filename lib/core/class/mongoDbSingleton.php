@@ -1,8 +1,6 @@
 <?php
 namespace core;
 
-use MongoDB\Client as Mongo;
-
 /**
  * Connexion aux bases de données MongoDb
  *
@@ -59,7 +57,7 @@ class mongoDbSingleton
 			        $connect = $mongoUser . ':' . $mongoPass . '@';
 			    }
 
-			    self::$instance[$name] = new Mongo(
+			    self::$instance[$name] = new \MongoDB\Client(
 			        'mongodb://' . $connect . $mongoHost . ':' . $mongoPort,
 			        $connectOptions
 			    );
