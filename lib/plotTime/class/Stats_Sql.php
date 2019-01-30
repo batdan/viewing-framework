@@ -738,23 +738,25 @@ class Stats_Sql extends Stats_Bases
 		$pageCourante = $_SERVER['PHP_SELF'];
 
 		$js = <<<eof
-			// Gestion liée des deux dateTimePicker
-		    $('#dtp_deb').datetimepicker({
-				format: '{$this->formatDateTimePicker()}'
-			});
-		    $('#dtp_fin').datetimepicker({
-				format: '{$this->formatDateTimePicker()}',
-		        useCurrent: false //Important! See issue #1075
-		    });
-		    $("#dtp_deb").on("dp.change", function (e) {
-		        $('#dtp_fin').data("DateTimePicker").minDate(e.date);
-		    });
-		    $("#dtp_fin").on("dp.change", function (e) {
-		        $('#dtp_deb').data("DateTimePicker").maxDate(e.date);
-		    });
+			$(function () {
+				// Gestion liée des deux dateTimePicker
+			    $('#dtp_deb').datetimepicker({
+					format: '{$this->formatDateTimePicker()}'
+				});
+			    $('#dtp_fin').datetimepicker({
+					format: '{$this->formatDateTimePicker()}',
+			        useCurrent: false //Important! See issue #1075
+			    });
+			    $("#dtp_deb").on("dp.change", function (e) {
+			        $('#dtp_fin').data("DateTimePicker").minDate(e.date);
+			    });
+			    $("#dtp_fin").on("dp.change", function (e) {
+			        $('#dtp_deb').data("DateTimePicker").maxDate(e.date);
+			    });
 
-			// Affichage amélioré du select
-			$('#stepTimeline').selectpicker();
+				// Affichage amélioré du select
+				$('#stepTimeline').selectpicker();
+			});
 eof;
 
 		libIncluder::add_JsScript($js, false);
