@@ -1,7 +1,7 @@
 <?php
 require_once "../bootstrap.php";
 
-use Zi\PlotTime\Stats_Sql;
+use vw\stats\sqlDb;
 
 $bdd			= 'offidem';
 
@@ -86,7 +86,7 @@ $fieldsForm = array(
 					);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-$grid = new Stats_Sql(array(
+$grid = new sqlDb(array(
 								'champs'			=>	$champs,
 
 								'bdd' 				=> 	$bdd,					// clé absente = instance PDO : 'default'

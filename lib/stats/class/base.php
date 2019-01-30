@@ -1,5 +1,5 @@
 <?php
-namespace vw\plotTime;
+namespace vw\stats;
 
 use core\libIncluder;
 use core\libIncluderList;
@@ -11,7 +11,7 @@ use core\libIncluderList;
  *
  * @author Daniel Gomes
  */
-class Stats_Bases
+class base
 {
 	/**
 	 * @var string
@@ -1397,7 +1397,7 @@ eof;
 
 	public function renderPage()
 	{
-		$r = new Stats_PageRenderer($this);
+		$r = new renderer($this);
 		return $r->render();
 	}
 }

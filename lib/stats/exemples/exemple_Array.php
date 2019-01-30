@@ -1,7 +1,7 @@
 <?php
 require_once "../bootstrap.php";
 
-use Zi\PlotTime\Stats_Array;
+use vw\stats\data;
 
 
 /**
@@ -88,7 +88,7 @@ foreach ($lines as $k=>$v) {
 ///////////////////////////////////////////////////////////////////////////////
 
 
-$grid = new Stats_Array(array(
+$grid = new data(array(
 								'data' 				=> 	$data,
 
 								'fields'			=> 	$fields,

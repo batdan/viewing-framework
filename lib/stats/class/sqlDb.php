@@ -1,5 +1,5 @@
 <?php
-namespace vw\plotTime;
+namespace vw\stats;
 
 use core\libIncluder;
 use core\dbSingleton;
@@ -9,7 +9,7 @@ use core\dbSingleton;
  *
  * @author Daniel Gomes
  */
-class Stats_Sql extends Stats_Bases
+class sqlDb extends base
 {
 	/**
 	 * Instance PDO

@@ -1,12 +1,12 @@
 <?php
-namespace vw\plotTime;
+namespace vw\stats;
 
 /**
  * Rendu HTML
  *
  * @author Daniel Gomes
  */
-class Stats_PageRenderer
+class renderer
 {
 	/**
 	 * @var ZiGrid_Base
@@ -16,9 +16,9 @@ class Stats_PageRenderer
 
 	/**
 	 * Récupération des données à afficher
-	 * @param Stats_Bases
+	 * @param base
 	 */
-	public function __construct(Stats_Bases $grid)
+	public function __construct(base $grid)
 	{
 		$this->grid = $grid;
 	}
