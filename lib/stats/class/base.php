@@ -281,7 +281,7 @@ class base
 		}
 
 		if ($this->width) {
-			$html .= '<div id="div_' . $this->id . '" class="plottime" style="width:' . $this->width .'">' . chr(10);
+			$html .= '<div id="div_' . $this->id . '" class="stats" style="width:' . $this->width .'">' . chr(10);
 		}
 
 		if (($this->type == 'array')  ||  (isset($_GET['dtp_deb']) && isset($_GET['dtp_fin']) && isset($_GET['stepTimeline'])) ) {

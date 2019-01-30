@@ -1,29 +1,29 @@
-.plottime table {
+.stats table {
     border-collapse: collapse;
     font-size: 12px;
 }
 
-.plottime td, .plottime th {
+.stats td, .stats th {
     vertical-align: baseline;
     border: 1px solid #ccc;
     padding: 4px;
 }
 
-.plottime	.intitule {
+.stats	.intitule {
 	font-weight: bold;
 }
 
-.plottime	.valMin {
+.stats	.valMin {
 	font-weight: bold;
 	color: blue;
 }
 
-.plottime	.valMax {
+.stats	.valMax {
 	font-weight: bold;
 	color: red;
 }
 
-.plottime	.desc_H1 {
+.stats	.desc_H1 {
 	color: #777;
 	font-size: 16px;
 	margin: 0 0 10px 0;
