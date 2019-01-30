@@ -288,7 +288,7 @@ class Stats_Bases
 
 			// Affichage du titre
 			if (!empty($this->title)) {
-				$html .= '<h1 style="margin-top:0;">' . ucfirst($this->title) . '</h1>' . chr(10);
+				$html .= '<h1 style="margin-top:10px;">' . ucfirst($this->title) . '</h1>' . chr(10);
 			}
 
 			// Affichichage de la description
