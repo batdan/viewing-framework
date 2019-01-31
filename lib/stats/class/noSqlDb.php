@@ -12,9 +12,9 @@ use core\mongoDbSingleton;
 class noSqlDb extends base
 {
 	/**
-	 * Instance PDO
+	 * Instance MongoDb
 	 */
-	protected $pdo;
+	protected $connectCollection;
 
 
 	/**
@@ -50,7 +50,10 @@ class noSqlDb extends base
 	 */
 	protected $champs;
 
-	protected $bdd;				// Choix de la base de donnée (non renseigné = default)
+	protected $mongoConf;		// Choix de la configuration MongoDb (non renseigné = default)
+	protected $mongoBase;		// Sélection de la base de donées
+	protected $mongoCollection;	// Choix de la collection
+
 	protected $req;				// Requête
 	protected $reqCompar;		// Requête (comparaison)
 	protected $hydrateReq;		// Tableau facultatif : Permet de passer des valeurs supplémentaires à la close WHERE d'un requête
@@ -121,7 +124,10 @@ class noSqlDb extends base
 				'data' 				=> array(),
 				'champs'			=> array(),
 
-				'bdd' 				=> '',
+				'mongoConf'			=> 'default',
+				'mongoBase'			=> '',
+				'mongoCollection'	=> '',
+
 				'req'				=> '',
 				'hydrateReq'		=> '',
 
@@ -145,7 +151,7 @@ class noSqlDb extends base
 											'YEAR'		=> 'Années',
 											'MONTH'		=> 'Mois',
 											'WEEK'		=> 'Semaines',
-											'WEEK_S'	=> 'Semaines (1er jour samedi)',
+											// 'WEEK_S'	=> 'Semaines (1er jour samedi)',
 											'DAY'		=> 'Jours',
 											'int_JOUR'	=> 'Interval jours de la semaine',
 											'60'		=> 'Heures de la journée',
@@ -176,7 +182,10 @@ class noSqlDb extends base
 		$this->data				= $options['data'];
 		$this->champs			= $options['champs'];
 
-		$this->bdd				= $options['bdd'];
+		$this->mongoConf		= $options['mongoConf'];
+		$this->mongoBase		= $options['mongoBase'];
+		$this->mongoCollection	= $options['mongoCollection'];
+
 		$this->req				= $options['req'];
 		$this->hydrateReq		= $options['hydrateReq'];
 
@@ -267,14 +276,16 @@ class noSqlDb extends base
 
 
 	/**
-	 * Connexion à la base de donnée
+	 * Connexion à la base de donnée mongoDb
 	 */
-	private function connectPDO()
+	private function connectMongoDb()
 	{
-		if (!empty($this->bdd)) {
-			$this->pdo = dbSingleton::getInstance($this->bdd);
-		} else {
-			$this->pdo = dbSingleton::getInstance();
+		$mongoClient = mongoDbSingleton::getInstance($this->mongoConf);
+
+		try {
+			$this->connectCollection = $mongoClient->{$this->mongoBase}->{$this->mongoCollection};
+		} catch (\Exception $e) {
+			echo $e->getMessage;
 		}
 	}
 
@@ -374,7 +385,7 @@ class noSqlDb extends base
 	private function setData()
 	{
 		// Connexion à la BDD
-		$this->connectPDO();
+		$this->connectMongoDb();
 
 		// Préparation de la requête
 		if ($this->chpDateType == 'date') {
@@ -447,7 +458,7 @@ class noSqlDb extends base
 			if (is_array($reqDescription) && !empty($reqDescription[3])) {
 				$sql = $reqDescription[3]->prepare($req);
 			} else {
-				$sql = $this->pdo->prepare($req);
+				$sql = $this->connectCollection->prepare($req);
 			}
 
 			// echo $req;
@@ -501,7 +512,7 @@ class noSqlDb extends base
 				if (is_array($reqDescription) && !empty($reqDescription[3])) {
 					$sqlCompar = $reqDescription[3]->prepare($this->reqCompar);
 				} else {
-					$sqlCompar = $this->pdo->prepare($this->reqCompar);
+					$sqlCompar = $this->connectCollection->prepare($this->reqCompar);
 				}
 
 				$valuesCompar = array(

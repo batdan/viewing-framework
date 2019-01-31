@@ -145,7 +145,7 @@ class sqlDb extends base
 											'YEAR'		=> 'Années',
 											'MONTH'		=> 'Mois',
 											'WEEK'		=> 'Semaines',
-											'WEEK_S'	=> 'Semaines (1er jour samedi)',
+											// 'WEEK_S'	=> 'Semaines (1er jour samedi)',
 											'DAY'		=> 'Jours',
 											'int_JOUR'	=> 'Interval jours de la semaine',
 											'60'		=> 'Heures de la journée',
