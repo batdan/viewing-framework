@@ -663,7 +663,7 @@ class noSqlDb extends base
 
 				for ($l=0; $l<count($result); $l++) {
 
-					if (isset($resultCompar[$l]) && isset($resultCompar[$l][$k])) { 
+					if (isset($resultCompar[$l]) && isset($resultCompar[$l][$k])) {
 						$this->data[$line]['values'][$linenterval_req[$j]['myInterval']] 	= $resultCompar[$l][$k];
 						$this->data[$line]['valuesN'][$linenterval_req[$j]['myInterval']]	= $resN[$l];
 
