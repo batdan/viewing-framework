@@ -2,14 +2,14 @@
 namespace vw\stats;
 
 use core\libIncluder;
-use core\dbSingleton;
+use core\mongoDbSingleton;
 
 /**
- * Création d'une statisque sur la base d'une requête MySQL
+ * Création d'une statisque sur la base d'une requête MongoDb
  *
  * @author Daniel Gomes
  */
-class sqlDb extends base
+class noSqlDb extends base
 {
 	/**
 	 * Instance PDO
@@ -663,7 +663,7 @@ class sqlDb extends base
 
 				for ($l=0; $l<count($result); $l++) {
 
-					if (isset($resultCompar[$l]) && isset($resultCompar[$l][$k])) {
+					if (isset($resultCompar[$l]) && isset($resultCompar[$l][$k])) { 
 						$this->data[$line]['values'][$linenterval_req[$j]['myInterval']] 	= $resultCompar[$l][$k];
 						$this->data[$line]['valuesN'][$linenterval_req[$j]['myInterval']]	= $resN[$l];
 
