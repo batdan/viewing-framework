@@ -1,6 +1,8 @@
 <?php
 namespace form;
 
+use core\dbSingleton;
+
 /**
  * Actions sur le formulaire
  *
@@ -31,7 +33,7 @@ class control
 	public function __construct($form, $options=null, $activationVerrou=true, $disabledSave=false)
 	{
 		// Instance PDO
-		$this->_dbh = \core\dbSingleton::getInstance();
+		$this->_dbh = dbSingleton::getInstance();
 
 		// Désactivation du bouton save
 		$this->_disabledSave = $disabledSave;
@@ -245,7 +247,6 @@ class control
 
 				$buttonSaveExit->appendChild($image2);
 			}
-
 		}
 
 
@@ -271,9 +272,15 @@ class control
 		if (empty($this->_form->getClePrimaireId())) {
 			$affBtnSaveExit = false;
 		}
-		if (! isset($this->_options['custumBtn']['saveExit']['activ']) || $this->_options['custumBtn']['saveExit']['activ'] === false) {
+		if (isset($this->_options['custumBtn']['saveExit']['activ']) && $this->_options['custumBtn']['saveExit']['activ'] === false) {
 			$affBtnSaveExit = false;
 		}
+
+		if ($affBtnSaveExit !== true) {
+			error_log('la misere...');
+		}
+
+
 		if ($affBtnSaveExit === true) {
 			$div->appendChild($buttonSaveExit);
 		}
