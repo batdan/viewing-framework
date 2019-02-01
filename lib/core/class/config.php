@@ -128,7 +128,7 @@ class config
 		while (($file = readdir($dh)) !== false) {
 
 			// Récupération des fichiers du dossier
-			if ( $file != '.' && $file != '..' && !is_dir($file) && !strstr($file, '.dist')) { 
+			if ( $file != '.' && $file != '..' && !is_dir($file) && !strstr($file, '.dist')) {
 
 				$expFile = explode('.', $file);
 
@@ -141,7 +141,7 @@ class config
 		}
 
 		if (!isset($extension)) {
-			throw new \Exception("Fichier de configuration absent", 1);
+			throw new \Exception("Fichier de configuration '$confFile' absent", 1);
 		}
 
 		// on ferme la connection
