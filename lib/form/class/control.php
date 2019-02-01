@@ -276,11 +276,6 @@ class control
 			$affBtnSaveExit = false;
 		}
 
-		if ($affBtnSaveExit !== true) {
-			error_log('la misere...');
-		}
-
-
 		if ($affBtnSaveExit === true) {
 			$div->appendChild($buttonSaveExit);
 		}
