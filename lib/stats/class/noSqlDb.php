@@ -3,6 +3,7 @@ namespace vw\stats;
 
 use core\libIncluder;
 use core\mongoDbSingleton;
+use backoffice\bdd\MongoUtils;
 
 /**
  * Création d'une statisque sur la base d'une requête MongoDb
@@ -54,7 +55,10 @@ class noSqlDb extends base
 	protected $mongoBase;		// Sélection de la base de donées
 	protected $mongoCollection;	// Choix de la collection
 
-	protected $req;				// Requête
+	protected $req;				// Requête MongoDb
+
+	protected $addGroup;		// Permet de rajouter des filtres en plus des intervals de temps dans "$group"
+
 	protected $reqCompar;		// Requête (comparaison)
 	protected $hydrateReq;		// Tableau facultatif : Permet de passer des valeurs supplémentaires à la close WHERE d'un requête
 								// Exemple : $hydrateReq = array(
@@ -68,13 +72,9 @@ class noSqlDb extends base
 
 	protected $datedeb;			// Date début au format 	: yyyy-mm-dd
 	protected $datefin;			// Date fin au format  		: yyyy-mm-dd
-	protected $heuredeb;		// Heure début au format 	: hh:mm:ss ou hh::mm
-	protected $heurefin;		// Heure fin au format 		: hh:mm:ss ou hh::mm
 
 	protected $datedebCompar;	// Date début au format 	: yyyy-mm-dd (comparaison)
 	protected $datefinCompar;	// Date fin au format  		: yyyy-mm-dd (comparaison)
-	protected $heuredebCompar;	// Heure début au format 	: hh:mm:ss ou hh::mm (comparaison)
-	protected $heurefinCompar;	// Heure fin au format 		: hh:mm:ss ou hh::mm (comparaison)
 
 	protected $chpDate;			// Champ servant à filtrer sur la date
 	protected $chpDateType;		// Type de champ date : date | time | datetime
@@ -129,19 +129,17 @@ class noSqlDb extends base
 				'mongoCollection'	=> '',
 
 				'req'				=> '',
+				'addGroup'			=> array(),
+
 				'hydrateReq'		=> '',
 
 				'fieldsForm'		=> '',
 
 				'datedeb'			=> '',
 				'datefin'			=> '',
-				'heuredeb'			=> '',
-				'heurefin'			=> '',
 
 				'datedebCompar'		=> '',
 				'datefinCompar'		=> '',
-				'heuredebCompar'	=> '',
-				'heurefinCompar'	=> '',
 
 				'chpDate'			=> '',
 				'chpDateType'		=> '',
@@ -186,20 +184,18 @@ class noSqlDb extends base
 		$this->mongoBase		= $options['mongoBase'];
 		$this->mongoCollection	= $options['mongoCollection'];
 
-		$this->req				= $options['req'];
+		$this->req 				= $options['req'];
+		$this->addGroup			= $options['addGroup'];
+
 		$this->hydrateReq		= $options['hydrateReq'];
 
 		$this->fieldsForm		= $options['fieldsForm'];
 
 		$this->datedeb			= $options['datedeb'];
 		$this->datefin			= $options['datefin'];
-		$this->heuredeb			= $options['heuredeb'];
-		$this->heurefin			= $options['heurefin'];
 
 		$this->datedebCompar	= $options['datedebCompar'];
 		$this->datefinCompar	= $options['datefinCompar'];
-		$this->heuredebCompar	= $options['heuredebCompar'];
-		$this->heurefinCompar	= $options['heurefinCompar'];
 
 		$this->chpDate			= $options['chpDate'];
 		$this->chpDateType		= $options['chpDateType'];
@@ -221,53 +217,44 @@ class noSqlDb extends base
 	{
 		if (! empty($this->stepTimeline)) {
 
-			$plages = array(
-				'YEAR',
-				'MONTH',
-				'WEEK',
-				'WEEK_S',
-				'DAY',
-				'int_JOUR'
+			// Configuration des intervals
+			$intervals = array(
+				'YEAR' 		=> array(
+									"year" 			=> array('$year'		=> '$'  . $this->chpDate),
+				),
+				'MONTH'		=> array(
+									"year" 			=> array('$year'		=> '$'  . $this->chpDate),
+									"month" 		=> array('$month'		=> '$'  . $this->chpDate),
+				),
+				'WEEK'		=> array(
+									"year" 			=> array('$year'		=> '$'  . $this->chpDate),
+									"week" 			=> array('$week'  		=> '$'  . $this->chpDate),
+				),
+				'DAY'		=> array(
+									"year" 			=> array('$year'	 	=> '$'  . $this->chpDate),
+									"month" 		=> array('$month' 		=> '$'  . $this->chpDate),
+									"dayOfMonth" 	=> array('$dayOfMonth' 	=> '$'  . $this->chpDate),
+				),
+				'int_JOUR'	=> array(
+									"dayOfWeek" 	=> array('$dayOfWeek'	=> '$'  . $this->chpDate),
+				),
+				'HOUR'		=> array(
+									"hour" 			=> array('$hour'	 	=> '$'  . $this->chpDate),
+				),
 			);
 
-			$intevals = array('60', '30', '15', '10', '5');
+			$interval = $intervals[$this->stepTimeline];
 
-			if (in_array($this->stepTimeline, $plages)) {
-
-				switch($this->stepTimeline)
-				{
-					case 'YEAR' 	: $dateFormatType = '%Y'; 			break;
-					case 'MONTH' 	: $dateFormatType = '%Y-%m'; 		break;
-					case 'WEEK' 	: $dateFormatType = '%x-W%v'; 		break;		// (lundi = premier jour)
-					case 'WEEK_S' 	: $dateFormatType = '%X-W%V'; 		break;		// (samedi = premier jour)
-					case 'DAY'	 	: $dateFormatType = '%Y-%m-%d'; 	break;
-					case 'int_JOUR'	: $dateFormatType = '%w'; 			break;		// Jour de la semaine (0=dimanche, 6=samedi)
-				}
-
-				$plageOuInterval = "DATE_FORMAT( __chpDate__, '" . $dateFormatType . "') AS myInterval, ";
+			if (is_array($this->addGroup) && count($this->addGroup) > 0) {
+				$interval = array_merge($interval, $this->addGroup);
 			}
 
-			if (in_array($this->stepTimeline, $intevals)) {
+			// Groupe Interval
+			$group = array(
+				"_id" => $interval
+			);
 
-				$plageOuInterval = "CAST(
-											FROM_UNIXTIME(
-												FLOOR(
-														(
-															(DATE_FORMAT(__chpDate__, '%H') * 60)
-															+
-															 DATE_FORMAT(__chpDate__, '%i')
-														)
-
-														/ " . $this->stepTimeline . "
-													)
-
-												* 60 * " . $this->stepTimeline . "
-												)
-									AS TIME	)
-									AS myInterval, ";
-			}
-
-			return $plageOuInterval;
+			return $group;
 
 		} else {
 			// die("L'attribut 'stepType' n'est pas renseigné");
@@ -302,17 +289,11 @@ class noSqlDb extends base
 			switch ($this->chpDateType)
 			{
 				case 'date' :
-					$this->datedeb 	= $_GET['dtp_deb'];
-					break;
-
-				case 'time' :
-					$this->heuredeb = $_GET['dtp_deb'];
+					$this->datedeb 	= MongoUtils::convertType($_GET['dtp_deb'] . ' 00:00:00', $this->chpDateType);
 					break;
 
 				case 'datetime' :
-					$explodeDT = explode(" ", $_GET['dtp_deb']);
-					$this->datedeb 	= $explodeDT[0];
-					$this->heuredeb = $explodeDT[1];
+					$this->datedeb 	= MongoUtils::convertType($_GET['dtp_deb'], $this->chpDateType);
 					break;
 			}
 		}
@@ -327,17 +308,11 @@ class noSqlDb extends base
 					// Ajoute d'un jour à la date de fin pour que la date demandée soit incluse
 					$d = new \DateTime($_GET['dtp_fin']);
 					$d->modify('+1 day');
-					$this->datefin 	= $d->format('Y-m-d');
-					break;
-
-				case 'time' :
-					$this->heurefin = $_GET['dtp_fin'];
+					$this->datefin 	= MongoUtils::convertType($d->format('Y-m-d H:i:s'), $this->chpDateType);
 					break;
 
 				case 'datetime' :
-					$explodeDT = explode(" ", $_GET['dtp_fin']);
-					$this->datefin 	= $explodeDT[0];
-					$this->heurefin = $explodeDT[1];
+					$this->datedeb 	= MongoUtils::convertType($_GET['dtp_fin'], $this->chpDateType);
 					break;
 			}
 		}
@@ -346,29 +321,32 @@ class noSqlDb extends base
 
 			if (isset($_GET['dtp_deb_compar'])) {
 
-				$this->dtpDebCompar = $_GET['dtp_deb_compar'];
+				switch ($this->chpDateType)
+				{
+					case 'date' :
+						$this->datedebCompar = MongoUtils::convertType($_GET['dtp_deb_compar'] . ' 00:00:00', $this->chpDateType);
+						break;
 
-				if ($this->chpDateType == 'date') 	$this->datedebCompar 	= $_GET['dtp_deb_compar'];
-				if ($this->chpDateType == 'time') 	$this->heuredebCompar	= $_GET['dtp_deb_compar'];
-
-				if ($this->chpDateType == 'datetime') {
-					$explodeDT = explode(" ", $_GET['dtp_deb_compar']);
-					$this->datedebCompar	= $explodeDT[0];
-					$this->heuredebCompar 	= $explodeDT[1];
+					case 'datetime' :
+						$this->datedebCompar = MongoUtils::convertType($_GET['dtp_deb_compar'], $this->chpDateType);
+						break;
 				}
 			}
 
 			if (isset($_GET['dtp_fin_compar'])) {
 
-				$this->dtpFinCompar = $_GET['dtp_fin_compar'];
+				switch ($this->chpDateType)
+				{
+					case 'date' :
+						// Ajoute d'un jour à la date de fin pour que la date demandée soit incluse
+						$d = new \DateTime($_GET['dtp_fin_compar']);
+						$d->modify('+1 day');
+						$this->datefinCompar = MongoUtils::convertType($d->format('Y-m-d H:i:s'), $this->chpDateType);
+						break;
 
-				if ($this->chpDateType == 'date') 	$this->datefinCompar	= $_GET['dtp_fin_compar'];
-				if ($this->chpDateType == 'time') 	$this->heurefinCompar	= $_GET['dtp_fin_compar'];
-
-				if ($this->chpDateType == 'datetime') {
-					$explodeDT = explode(" ", $_GET['dtp_fin_compar']);
-					$this->datefinCompar	= $explodeDT[0];
-					$this->heurefinCompar	= $explodeDT[1];
+					case 'datetime' :
+						$this->datefinCompar = MongoUtils::convertType($_GET['dtp_fin_compar'], $this->chpDateType);
+						break;
 				}
 			}
 		}
@@ -387,36 +365,6 @@ class noSqlDb extends base
 		// Connexion à la BDD
 		$this->connectMongoDb();
 
-		// Préparation de la requête
-		if ($this->chpDateType == 'date') {
-			$plageDeb = $this->datedeb;
-			$plageFin = $this->datefin;
-		} elseif ($this->chpDateType == 'time') {
-			$plageDeb = $this->heuredeb;
-			$plageFin = $this->heurefin;
-		} elseif ($this->chpDateType == 'datetime') {
-			$plageDeb = $this->datedeb . ' ' . $this->heuredeb;
-			$plageFin = $this->datefin . ' ' . $this->heurefin;
-		} else {
-			die ("Le champ 'chpDateType' et/ou est absent ou n'est pas correctement renseigné");
-		}
-
-		// Préparation de la requête de comparaison
-		if ($this->compar === true && (! empty($this->dtpDebCompar)) && (! empty($this->dtpFinCompar))) {
-			if ($this->chpDateType == 'date') {
-				$plageDebCompar = $this->datedebCompar;
-				$plageFinCompar = $this->datefinCompar;
-			} elseif ($this->chpDateType == 'time') {
-				$plageDebCompar = $this->heuredebCompar;
-				$plageFinCompar = $this->heurefinCompar;
-			} elseif ($this->chpDateType == 'datetime') {
-				$plageDebCompar = $this->datedebCompar . ' ' . $this->heuredebCompar;
-				$plageFinCompar = $this->datefinCompar . ' ' . $this->heurefinCompar;
-			} else {
-				die ("Le champ 'chpDateType' et/ou est absent ou n'est pas correctement renseigné");
-			}
-		}
-
 		// Il est possible de chaîner plusieurs requêtes en les plaçant dans un tableau
 		if (is_array($this->req)) {
 			$reqlist = $this->req;
@@ -431,28 +379,67 @@ class noSqlDb extends base
 
 		foreach ($reqlist as $reqDescription) {
 
-			//Il est possible de spécifier pour chaque requêtes le chpdate et chpDateType
-			if (is_array($reqDescription)) {
+			// Il est possible de spécifier pour chaque requêtes le chpdate et chpDateType
+			if (isset($reqDescription['req'])) {
 
-				$req = $reqDescription[0];
+				/**
+				 * $req = array(
+				 * 				array(
+				 * 					'req' 			=> pipeline,
+				 * 					'chpDate'		=> 'nom_champ_date',
+				 * 					'chpDateType'	=> 'type_champ_date',
+				 * 					'collection'	=> 'nom_collection',
+				 * 				),
+				 * 				...
+				 * );
+				 *  ...
+				 */
 
-				if (!empty($reqDescription[1])) {
-					$this->chpDate = $reqDescription[1];
+				$req = $reqDescription['req'];
+
+				if (!empty($reqDescription['chpDate'])) {
+					$this->chpDate = $reqDescription['chpDate'];
 				}
 
-				if (!empty($reqDescription[2])) {
-					$this->chpDateType = $reqDescription[2];
+				if (!empty($reqDescription['chpDateType'])) {
+					$this->chpDateType = $reqDescription['chpDateType'];
+				}
+
+				if (!empty($reqDescription['collection'])) {
+					try {
+						$this->connectCollection = $mongoClient->{$this->mongoBase}->{$reqDescription['collection']};
+					} catch (\Exception $e) {
+						echo $e->getMessage;
+					}
 				}
 
 			} else {
+
+				/**
+				 * $req = array(
+				 * 			pipeline1,
+				 * 			pipeline2,
+				 * 			...
+				 * )
+				 */
+
 				$req = $reqDescription;
 			}
 
 			// Remplacement du filtre par plage ou interval
-			$req = str_replace("__plageOuInterval__", $this->dateFormatType(), $req);
+			$req[0]['$group'] = array_merge($this->dateFormatType(), $req[0]['$group']);
 
 			// Remplacement du champ date
-			$req = str_replace("__chpDate__", $this->chpDate, $req);
+			$req[0]['$match'] = array_merge(
+				$req[0]['$match'],
+				array(
+					$this->chpDate => array(
+						'$gte' => $this->datedeb,
+						'$lte' => $this->datefin
+					)
+				)
+			);
+
 
 			// Exécution de la requête
 			if (is_array($reqDescription) && !empty($reqDescription[3])) {
