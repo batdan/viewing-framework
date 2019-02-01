@@ -17,7 +17,7 @@ class config
 	/**
 	 * Attributs
 	 */
-	private static $_instance 	= array();
+	private static $_instance = array();
 
 
 	/**
