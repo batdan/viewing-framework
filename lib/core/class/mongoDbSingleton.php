@@ -34,6 +34,7 @@ class mongoDbSingleton
 				$mongo = config::getConfig('mongo');
 
 				$mongoHost = $mongo[$name]['mongoHost'];
+				$mongoBase = $mongo[$name]['mongoBase'];
 				$mongoUser = $mongo[$name]['mongoUser'];
 				$mongoPass = $mongo[$name]['mongoPass'];
 				$mongoPort = $mongo[$name]['mongoPort'];
@@ -48,10 +49,12 @@ class mongoDbSingleton
 			        $connect = $mongoUser . ':' . $mongoPass . '@';
 			    }
 
-			    self::$instance[$name] = new \MongoDB\Client(
+				$client = new \MongoDB\Client(
 			        'mongodb://' . $connect . $mongoHost . ':' . $mongoPort,
 			        $connectOptions
 			    );
+
+			    self::$instance[$name] = $client->{$mongoBase};
 
 			} catch (\Exception $e) {
 

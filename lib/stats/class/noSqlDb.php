@@ -267,10 +267,10 @@ class noSqlDb extends base
 	 */
 	private function connectMongoDb()
 	{
-		$mongoClient = mongoDbSingleton::getInstance($this->mongoConf);
+		$mongoDbSingleton = mongoDbSingleton::getInstance($this->mongoConf);
 
 		try {
-			$this->connectCollection = $mongoClient->{$this->mongoBase}->{$this->mongoCollection};
+			$this->connectCollection = $mongoDbSingleton->{$this->mongoCollection};
 		} catch (\Exception $e) {
 			echo $e->getMessage;
 		}
