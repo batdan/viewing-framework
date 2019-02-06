@@ -747,19 +747,17 @@ eof;
 			$btnAffSG 	= '';
 			if (isset($v_line['group'])  &&  $v_line['group'] === true) {
 
- $hex = str_replace("#", "", $v_line['groupColor']);
+				$hex = str_replace("#", "", $v_line['groupColor']);
 
-   if(strlen($hex) == 3) {
-      $r = hexdec(substr($hex,0,1).substr($hex,0,1));
-      $g = hexdec(substr($hex,1,1).substr($hex,1,1));
-      $b = hexdec(substr($hex,2,1).substr($hex,2,1));
-   } else {
-      $r = hexdec(substr($hex,0,2));
-      $g = hexdec(substr($hex,2,2));
-      $b = hexdec(substr($hex,4,2));
-   }
-
-
+				if(strlen($hex) == 3) {
+					$r = hexdec(substr($hex,0,1).substr($hex,0,1));
+					$g = hexdec(substr($hex,1,1).substr($hex,1,1));
+					$b = hexdec(substr($hex,2,1).substr($hex,2,1));
+				} else {
+					$r = hexdec(substr($hex,0,2));
+					$g = hexdec(substr($hex,2,2));
+					$b = hexdec(substr($hex,4,2));
+				}
 
 				$bgColor  	= "background: rgba(".$r.", ".$g.", ".$b.", 0.1); "; //$bgColor  	= "background:#fdffcf;";
 

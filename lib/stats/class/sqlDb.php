@@ -351,7 +351,13 @@ class sqlDb extends base
 
 				$this->dtpFinCompar = $_GET['dtp_fin_compar'];
 
-				if ($this->chpDateType == 'date') 	$this->datefinCompar	= $_GET['dtp_fin_compar'];
+				if ($this->chpDateType == 'date') {
+					// Ajoute d'un jour à la date de fin pour que la date demandée soit incluse
+					$d = new \DateTime($_GET['dtp_fin_compar']);
+					$d->modify('+1 day');
+					$this->datefinCompar 	= $d->format('Y-m-d');
+				}
+
 				if ($this->chpDateType == 'time') 	$this->heurefinCompar	= $_GET['dtp_fin_compar'];
 
 				if ($this->chpDateType == 'datetime') {

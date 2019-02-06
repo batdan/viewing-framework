@@ -52,8 +52,10 @@ class noSqlDb extends base
 	protected $champs;
 
 	protected $mongoConf;		// Choix de la configuration MongoDb (non renseigné = default)
-	protected $mongoBase;		// Sélection de la base de donées
+	protected $mongoInstances;	// Instances de connexion aux BDD mongoDb
 	protected $mongoCollection;	// Choix de la collection
+	protected $mongoOptions;	// Configuration des options de la requête
+
 
 	protected $req;				// Requête MongoDb
 
@@ -96,6 +98,22 @@ class noSqlDb extends base
 	protected $linkNormal;		// Lien moteur de recherche sans comparaison
 	protected $linkCompar;		// Lien moteur de recherche avec comparaison
 
+	protected $days = array(
+		'Lundi',
+		'Mardi',
+		'Mercredi',
+		'Jeudi',
+		'Vendredi',
+		'samedi',
+		'Dimanche',
+	);
+
+	/**
+	 * Tableau contenant tous les intervals pour renvoyer un 0 dans les cases vides
+	 * @var array
+	 */
+	protected $intervals = array();
+
 
 	public function sethtmlEndForm($htmlEndForm)
 	{
@@ -125,15 +143,15 @@ class noSqlDb extends base
 				'champs'			=> array(),
 
 				'mongoConf'			=> 'default',
-				'mongoBase'			=> '',
 				'mongoCollection'	=> '',
+				'mongoOptions'		=> array('allowDiskUse' => true),
 
 				'req'				=> '',
-				'addGroup'			=> array(),
+				'addGroup'			=> '',
 
 				'hydrateReq'		=> '',
 
-				'fieldsForm'		=> '',
+				'fieldsForm'		=> array(),
 
 				'datedeb'			=> '',
 				'datefin'			=> '',
@@ -152,11 +170,7 @@ class noSqlDb extends base
 											// 'WEEK_S'	=> 'Semaines (1er jour samedi)',
 											'DAY'		=> 'Jours',
 											'int_JOUR'	=> 'Interval jours de la semaine',
-											'60'		=> 'Heures de la journée',
-											'30'		=> '1/2 heures de la journée',
-											'15'		=> '1/4 heures de la journée',
-											'10'		=> '1/6 heures de la journée (10 min)',
-											'5'			=> '1/12 heures de la journée (5 min)',
+											'HOUR'		=> 'Heures de la journée',
 				),
 
 				'dtpDeb'			=> '',
@@ -181,8 +195,8 @@ class noSqlDb extends base
 		$this->champs			= $options['champs'];
 
 		$this->mongoConf		= $options['mongoConf'];
-		$this->mongoBase		= $options['mongoBase'];
 		$this->mongoCollection	= $options['mongoCollection'];
+		$this->mongoOptions		= $options['mongoOptions'];
 
 		$this->req 				= $options['req'];
 		$this->addGroup			= $options['addGroup'];
@@ -245,8 +259,11 @@ class noSqlDb extends base
 
 			$interval = $intervals[$this->stepTimeline];
 
-			if (is_array($this->addGroup) && count($this->addGroup) > 0) {
-				$interval = array_merge($interval, $this->addGroup);
+			if (!empty($this->addGroup)) {
+				$interval = array_merge(
+					array($this->addGroup => '$' . $this->addGroup),
+					$interval
+				);
 			}
 
 			// Groupe Interval
@@ -265,12 +282,18 @@ class noSqlDb extends base
 	/**
 	 * Connexion à la base de donnée mongoDb
 	 */
-	private function connectMongoDb()
+	private function connectMongoDb($mongoConf=null)
 	{
-		$mongoDbSingleton = mongoDbSingleton::getInstance($this->mongoConf);
+		if (!is_array($this->mongoInstances)) {
+			$this->mongoInstances = array();
+		}
+
+		if (is_null($mongoConf)) {
+			$mongoConf = $this->mongoConf;
+		}
 
 		try {
-			$this->connectCollection = $mongoDbSingleton->{$this->mongoCollection};
+			$this->mongoInstances[$mongoConf] = mongoDbSingleton::getInstance($mongoConf);
 		} catch (\Exception $e) {
 			echo $e->getMessage;
 		}
@@ -289,11 +312,13 @@ class noSqlDb extends base
 			switch ($this->chpDateType)
 			{
 				case 'date' :
-					$this->datedeb 	= MongoUtils::convertType($_GET['dtp_deb'] . ' 00:00:00', $this->chpDateType);
+					$gmDateDeb = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_deb'] . ' 00:00:00'));
+					$this->datedeb = MongoUtils::convertType($gmDateDeb, $this->chpDateType);
 					break;
 
 				case 'datetime' :
-					$this->datedeb 	= MongoUtils::convertType($_GET['dtp_deb'], $this->chpDateType);
+					$gmDateDeb = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_deb']));
+					$this->datedeb = MongoUtils::convertType($_GET['dtp_deb'], $this->chpDateType);
 					break;
 			}
 		}
@@ -308,11 +333,14 @@ class noSqlDb extends base
 					// Ajoute d'un jour à la date de fin pour que la date demandée soit incluse
 					$d = new \DateTime($_GET['dtp_fin']);
 					$d->modify('+1 day');
-					$this->datefin 	= MongoUtils::convertType($d->format('Y-m-d H:i:s'), $this->chpDateType);
+
+					$gmDateFin = gmdate('d-m-Y H:i:s', $d->getTimestamp());
+					$this->datefin 	= MongoUtils::convertType($gmDateFin, $this->chpDateType);
 					break;
 
 				case 'datetime' :
-					$this->datedeb 	= MongoUtils::convertType($_GET['dtp_fin'], $this->chpDateType);
+					$gmDateFin = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_fin']));
+					$this->datefin 	= MongoUtils::convertType($gmDateFin, $this->chpDateType);
 					break;
 			}
 		}
@@ -321,19 +349,25 @@ class noSqlDb extends base
 
 			if (isset($_GET['dtp_deb_compar'])) {
 
+				$this->dtpDebCompar = $_GET['dtp_deb_compar'];
+
 				switch ($this->chpDateType)
 				{
 					case 'date' :
-						$this->datedebCompar = MongoUtils::convertType($_GET['dtp_deb_compar'] . ' 00:00:00', $this->chpDateType);
+						$gmDateDebCompar = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_deb_compar'] . ' 00:00:00'));
+						$this->datedebCompar = MongoUtils::convertType($gmDateDebCompar, $this->chpDateType);
 						break;
 
 					case 'datetime' :
-						$this->datedebCompar = MongoUtils::convertType($_GET['dtp_deb_compar'], $this->chpDateType);
+						$gmDateDebCompar = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_deb_compar']));
+						$this->datedebCompar = MongoUtils::convertType($gmDateDebCompar, $this->chpDateType);
 						break;
 				}
 			}
 
 			if (isset($_GET['dtp_fin_compar'])) {
+
+				$this->dtpFinCompar = $_GET['dtp_fin_compar'];
 
 				switch ($this->chpDateType)
 				{
@@ -341,11 +375,14 @@ class noSqlDb extends base
 						// Ajoute d'un jour à la date de fin pour que la date demandée soit incluse
 						$d = new \DateTime($_GET['dtp_fin_compar']);
 						$d->modify('+1 day');
-						$this->datefinCompar = MongoUtils::convertType($d->format('Y-m-d H:i:s'), $this->chpDateType);
+
+						$gmDateFinCompar = gmdate('d-m-Y H:i:s', $d->getTimestamp());
+						$this->datefinCompar = MongoUtils::convertType($d->format($gmDateFinCompar), $this->chpDateType);
 						break;
 
 					case 'datetime' :
-						$this->datefinCompar = MongoUtils::convertType($_GET['dtp_fin_compar'], $this->chpDateType);
+						$gmDateFin = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_fin_compar']));
+						$this->datefinCompar = MongoUtils::convertType($gmDateFin, $this->chpDateType);
 						break;
 				}
 			}
@@ -366,28 +403,32 @@ class noSqlDb extends base
 		$this->connectMongoDb();
 
 		// Il est possible de chaîner plusieurs requêtes en les plaçant dans un tableau
-		if (is_array($this->req)) {
-			$reqlist = $this->req;
+		$reqlist = array();
+		if (isset($this->req[0]['$project'])) {
+			$reqlist[] = $this->req;
 		} else {
-			$reqlist = array($this->req);
+			$reqlist = $this->req;
 		}
 
-
 		// On stock le résultats des requêtes normales et de comparaison
-		$result = array();
+		$result 	  = array();
 		$resultCompar = array();
 
-		foreach ($reqlist as $reqDescription) {
+		// Itérateur du résultat la requête
+		$itRes=0;
+
+		foreach ($reqlist as $key => $reqDescription) {
 
 			// Il est possible de spécifier pour chaque requêtes le chpdate et chpDateType
 			if (isset($reqDescription['req'])) {
 
 				/**
-				 * $req = array(
-				 * 				array(
+				 * $reqlist = array(
+				 * 				 array(
 				 * 					'req' 			=> pipeline,
 				 * 					'chpDate'		=> 'nom_champ_date',
 				 * 					'chpDateType'	=> 'type_champ_date',
+				 * 					'mongoConfName'	=> 'nom_conf_mongoDb',
 				 * 					'collection'	=> 'nom_collection',
 				 * 				),
 				 * 				...
@@ -405,33 +446,44 @@ class noSqlDb extends base
 					$this->chpDateType = $reqDescription['chpDateType'];
 				}
 
-				if (!empty($reqDescription['collection'])) {
-					try {
-						$this->connectCollection = $mongoClient->{$this->mongoBase}->{$reqDescription['collection']};
-					} catch (\Exception $e) {
-						echo $e->getMessage;
+				if (!empty($reqDescription['mongoConfName'])) {
+
+					$mongoConfName = $reqDescription['mongoConfName'];
+					$this->connectMongoDb($mongoConfName);
+
+					if (!empty($reqDescription['collection'])) {
+						$instance = $this->mongoInstances[$mongoConfName];
+						$connectCollection = $instance->{$reqDescription['collection']};
 					}
 				}
+
 
 			} else {
 
 				/**
-				 * $req = array(
-				 * 			pipeline1,
-				 * 			pipeline2,
-				 * 			...
+				 * $reqlist = array(
+				 * 				pipeline1,
+				 * 				pipeline2,
+				 * 				...
 				 * )
 				 */
+
+				if (empty($this->mongoCollection)) {
+					echo 'le nom de la collection absent !',
+					die;
+				}
+
+				if (isset($this->mongoCollection)) {
+					$instance = $this->mongoInstances[$this->mongoConf];
+					$connectCollection = $instance->{$this->mongoCollection};
+				}
 
 				$req = $reqDescription;
 			}
 
-			// Remplacement du filtre par plage ou interval
-			$req[0]['$group'] = array_merge($this->dateFormatType(), $req[0]['$group']);
-
 			// Remplacement du champ date
-			$req[0]['$match'] = array_merge(
-				$req[0]['$match'],
+			$req[1]['$match'] = array_merge(
+				$req[1]['$match'],
 				array(
 					$this->chpDate => array(
 						'$gte' => $this->datedeb,
@@ -440,250 +492,372 @@ class noSqlDb extends base
 				)
 			);
 
+			// Remplacement du filtre par plage ou interval
+			$req[2]['$group'] = array_merge(
+				$this->dateFormatType(),
+				$req[2]['$group']
+			);
 
-			// Exécution de la requête
-			if (is_array($reqDescription) && !empty($reqDescription[3])) {
-				$sql = $reqDescription[3]->prepare($req);
-			} else {
-				$sql = $this->connectCollection->prepare($req);
+			// Gestion de l'ordre des Résultats - Récupération des clés
+			$sortKeys = array_keys($req[2]['$group']['_id']);
+
+			foreach ($sortKeys as $sortKey) {
+				$req[3]['$sort']['_id.' . $sortKey] = 1;
 			}
 
-			// echo $req;
-
-			$values = array(
-				':plageDeb' => $plageDeb,
-				':plageFin' => $plageFin,
+			// Exécution de la requête | pipeline
+			$res = $connectCollection->aggregate(
+			    $req,
+				$this->mongoOptions
 			);
 
-			$sql->execute(
-				array_merge(
-					$this->hydrateReq,
-					$values
-				)
-			);
+			// Récupération des résultats
+			foreach ($res as $doc) {
 
-			while ($res = $sql->fetch()) {
+				// Récupération du nom de l'interval dans la timeLine (nom de la colonne)
+				$stepLib = $this->stepLibelle($doc);
 
-				$res = get_object_vars($res);
+				// Attention de toujours grouper sur une clé se nommant "resultat" dans le tableau de confiuration
 
-				// Recherche du bon indice
-				$i=0;
+				// Goupé seulement sur l'interval de temps
+				if (empty($this->addGroup)) {
+					$result[$itRes][$stepLib] = $doc->resultat;
 
-				// Si c'est pas le premier on recherche si myInterval existe déjà
-				if (isset($result[$i]["myInterval"])) {
-
-					while ($result[$i]["myInterval"] != $res["myInterval"] && $i<(count($result)-1)) {
-						$i++;
-					}
-
-					if ($result[$i]["myInterval"]!=$res["myInterval"]) {
-						$i++;
-					}
-				}
-
-				if (isset($result[$i])) {
-					$result[$i] = array_merge($result[$i], $res);
+				// Ajout d'un champ supplémentaire pour grouper
 				} else {
-					$result[$i] = $res;
+					$result[$itRes][$doc->_id->{$this->addGroup}][$stepLib] = $doc->resultat;
 				}
 			}
 
 			// Exécution de la requête de comparaison
-			if ($this->compar === true && (!empty($this->dtpDebCompar)) && (!empty($this->dtpFinCompar))) {
+			if ($this->compar === true && !empty($this->dtpDebCompar) && !empty($this->dtpFinCompar)) {
 
 				$this->reqCompar = $req;
-				$this->reqCompar = str_replace (":plageDeb", ":plageDebCompar", $this->reqCompar);
-				$this->reqCompar = str_replace (":plageFin", ":plageFinCompar", $this->reqCompar);
 
-				// Exécution de la requête
-				if (is_array($reqDescription) && !empty($reqDescription[3])) {
-					$sqlCompar = $reqDescription[3]->prepare($this->reqCompar);
-				} else {
-					$sqlCompar = $this->connectCollection->prepare($this->reqCompar);
-				}
-
-				$valuesCompar = array(
-					':plageDebCompar' => $plageDebCompar,
-					':plageFinCompar' => $plageFinCompar,
-				);
-
-				$sqlCompar->execute(
-					array_merge(
-						$this->hydrateReq,
-						$valuesCompar
+				// Remplacement du champ date
+				$this->reqCompar[1]['$match'] = array_merge(
+					$this->reqCompar[1]['$match'],
+					array(
+						$this->chpDate => array(
+							'$gte' => $this->datedebCompar,
+							'$lte' => $this->datefinCompar
+						)
 					)
 				);
 
-				while ($resCompar = $sqlCompar->fetch()) {
+				// Exécution de la requête | pipeline
+				$res = $connectCollection->aggregate(
+				    $this->reqCompar,
+					$this->mongoOptions
+				);
 
-					$resCompar = get_object_vars($resCompar);
+				// Récupération des résultats
+				foreach ($res as $doc) {
 
-					// Recherche du bon indice
-					$i=0;
+					// Récupération du nom de l'interval dans la timeLine (nom de la colonne)
+					$stepLib = $this->stepLibelle($doc);
 
-					// Si c'est pas le premier on recherche si myInterval existe déjà
-					if (isset($resultCompar[$i]["myInterval"])) {
+					// Attention de toujours grouper sur une clé se nommant "resultat" dans le tableau de confiuration
 
-						while ($resultCompar[$i]["myInterval"]!=$resCompar["myInterval"] && $i<(count($resultCompar)-1)) {
-							$i++;
-						}
+					// Goupé seulement sur l'interval de temps
+					if (empty($this->addGroup)) {
+						$resultCompar[$itRes][$stepLib] = $doc->resultat;
 
-						// Pas trouvée
-						if ($resultCompar[$i]["myInterval"]!=$resCompar["myInterval"]) {
-							$i++;
-						}
-					}
-
-					if (isset($resultCompar[$i])) {
-						$resultCompar[$i] = array_merge($resultCompar[$i], $resCompar);
+					// Ajout d'un champ supplémentaire pour grouper
 					} else {
-						$resultCompar[$i] = $resCompar;
+						$resultCompar[$itRes][$doc->_id->{$this->addGroup}][$stepLib] = $doc->resultat;
 					}
 				}
 			}
 
-			// Chargement des colonnes
-			foreach ($result as $k=>$v) {
-				$this->libelle[$v['myInterval']] = array_merge(
-					array('label' => $v['myInterval']),
-					$this->fieldsForm
-				);
+			// Chargement de la configuration des colonnes
+			if ($itRes == 0) {
+
+				if (empty($this->addGroup)) {
+
+					foreach ($result[$itRes] as $k=>$v) {
+						$this->libelle[$k] = array_merge(
+							array('label' => $k),
+							$this->fieldsForm
+						);
+					}
+
+				} else {
+
+					foreach ($result[$itRes] as $addGroup => $val) {
+						foreach ($val as $k=>$v) {
+							$this->libelle[$k] = array_merge(
+								array('label' => $k),
+								$this->fieldsForm
+							);
+						}
+					}
+				}
 			}
+
+			$itRes++;
 		}
 
 		// Résultat & comparaison période N-1
-		$result 	  = $this->postResult($result);
-		$resultCompar = $this->postResultCompar($resultCompar);
+		// $result 	  = $this->postResult($result);$
+		// $resultCompar = $this->postResultCompar($resultCompar);
 
-		// Chargement des datas
-		$line = 0;
+		$line  = 0;		// Chargement des datas | $line : Ligne dans le tableau
+		$itRes = 0;		// Itérateur pour requêtes multiples
+		$nChp  = 0;		// Itérateur configuration des champs / ligne
 
 		foreach ($this->champs as $k=>$v) {
 
-			$this->data[$line]['name']  = $k;
-			$this->data[$line]['label'] = $v['label'];
-			$this->data[$line]['type']	= 'normal';
+			// Pas de groupe supplémentaire
+			if (empty($this->addGroup)) {
 
-			if (isset($v['graph'])  &&  $v['graph'] === true) {
-				$this->data[$line]['graph'] 		= $v['graph'];
-				$this->data[$line]['graphOnLoad'] 	= $v['graphOnLoad'];
-				$this->data[$line]['graphColor'] 	= $v['graphColor'];
+				foreach ($result[$itRes] as $k2=>$v2) {
 
-				if (!empty($v['graphYAxis'])) {
-					$this->data[$line]['graphYAxis']	= $v['graphYAxis'];
-				}
+					// Ajout de la configuration de la ligne
+					$this->addLibelle($nChp, $line);
 
-				if (!empty($v['graphType'])) {
-					$this->data[$line]['graphType']	= $v['graphType'];
-				}
-			}
 
-			if (isset($v['group'])  &&  $v['group'] === true) {
-				$this->data[$line]['group'] = $v['group'];
-			}
+					if (!empty($v2)) {
 
-			if (isset($v['groupLabel'])  &&  $v['groupLabel'] != '') {
-				$this->data[$line]['groupLabel'] = $v['groupLabel'];
-			}
+						if (!in_array($k2, $this->intervals)) {
+							$this->intervals[] = $k2;
+						}
 
-			if (isset($v['groupColor'])  &&  $v['groupColor'] != '') {
-				$this->data[$line]['groupColor'] = $v['groupColor'];
-			}
-
-			if (! empty($v['align'])) {
-				$this->data[$line]['align'] = $v['align'];
-			}
-
-			if (isset($v['unite'])) {
-				$this->data[$line]['unite'] = $v['unite'];
-			}
-
-			if (isset($v['decimales'])) {
-				$this->data[$line]['decimales'] = $v['decimales'];
-			}
-
-			$linenterval_req 	= array();
-			$resN   			= array();
-
-			foreach ($result as $k2=>$v2) {
-
-				$linenterval_req[] = $v2;
-
-				if (isset($v2[$k])) {
-					$resN[] = $v2[$k];
-					$this->data[$line]['values'][$v2['myInterval']] = $v2[$k];
-				} else {
-					$resN[] = 0;
-					$this->data[$line]['values'][$v2['myInterval']] = 0;
-				}
-			}
-
-			// Lignes de comparaison
-			if ($this->compar === true && (! empty($this->dtpDebCompar)) && (! empty($this->dtpFinCompar))) {
-
-				$line++;
-
-				$this->data[$line]['name']  = $k;
-				$this->data[$line]['label'] = $v['label'] . ' N-1';
-				$this->data[$line]['type']	= 'compar';
-
-				if (isset($v['graph'])  &&  $v['graph'] === true) {
-					$this->data[$line]['graph'] 		= $v['graph'];
-					$this->data[$line]['graphOnLoad'] 	= false;
-					$this->data[$line]['graphColor'] 	= $this->pantoneColor($v['graphColor']);
-				}
-
-				if (isset($v['group'])  &&  $v['group'] === true) {
-					$this->data[$line]['group'] = $v['group'];
-				}
-
-				if (isset($v['groupLabel'])  &&  $v['groupLabel'] != '') {
-					$this->data[$line]['groupLabel'] = $v['groupLabel'];
-				}
-
-				if (isset($v['groupColor'])  &&  $v['groupColor'] != '') {
-					$this->data[$line]['groupColor'] = $v['groupColor'];
-				}
-
-				if (! empty($v['align'])) {
-					$this->data[$line]['align'] = $v['align'];
-				}
-
-				if (isset($v['unite'])) {
-					$this->data[$line]['unite'] = $v['unite'];
-				}
-
-				if (isset($v['decimales'])) {
-					$this->data[$line]['decimales'] = $v['decimales'];
-				}
-
-				$j=0;
-
-				for ($l=0; $l<count($result); $l++) {
-
-					if (isset($resultCompar[$l]) && isset($resultCompar[$l][$k])) {
-						$this->data[$line]['values'][$linenterval_req[$j]['myInterval']] 	= $resultCompar[$l][$k];
-						$this->data[$line]['valuesN'][$linenterval_req[$j]['myInterval']]	= $resN[$l];
-
+						$this->data[$line]['values'][$k2] = $v2;
 					} else {
-
-						$this->data[$line]['values'][$linenterval_req[$j]['myInterval']] 	= 0;
-						$this->data[$line]['valuesN'][$linenterval_req[$j]['myInterval']] 	= false;
+						$this->data[$line]['values'][$v2] = 0;
 					}
 
-					$j++;
+					$line++;
+
+					if ($this->compar !== true) {
+						$nChp++;
+					}
+
+					// Lignes de comparaison
+					if ($this->compar === true && (! empty($this->dtpDebCompar)) && (! empty($this->dtpFinCompar))) {
+
+						$this->addLibelle($nChp, $line, true);
+
+						$resultKeys 	  = array_keys($result[$itRes]);
+						$resultComparKeys = array_keys($resultCompar[$itRes]);
+
+						$nbResult = count($result[$itRes]);
+
+						for ($l=0; $l<$nbResult; $l++) {
+
+							if (isset($resultComparKeys[$l])) {
+
+								if (!in_array($resultKeys[$l], $this->intervals)) {
+									$this->intervals[] = $resultKeys[$l];
+								}
+
+								$this->data[$line]['values'][$resultKeys[$l]]		= $resultCompar[$itRes][$resultComparKeys[$l]];
+								$this->data[$line]['valuesN'][$resultKeys[$l]] 		= $result[$itRes][$resultKeys[$l]];
+							} else {
+								$this->data[$line]['values'][$resultKeys[$l]]		= false;
+								$this->data[$line]['valuesN'][$resultKeys[$l]] 		= 0;
+							}
+						}
+
+						$line++;
+						$nChp++;
+					}
+				}
+
+			// Groupé sur un champ définit dans la configuration
+			} else {
+
+				if (isset($result[$itRes])) {
+
+					foreach ($result[$itRes] as $addGroup => $val) {
+
+						foreach ($val as $k2 => $v2) {
+
+							// Ajout de la configuration de la ligne
+							$this->addLibelle($nChp, $line);
+
+							if (!empty($v2)) {
+
+								if (!in_array($k2, $this->intervals)) {
+									$this->intervals[] = $k2;
+								}
+
+								$this->data[$line]['values'][$k2] = $v2;
+							} else {
+								$this->data[$line]['values'][$v2] = 0;
+							}
+						}
+
+						$line++;
+
+						if ($this->compar !== true) {
+							$nChp++;
+						}
+
+						// Lignes de comparaison
+						if ($this->compar === true && (! empty($this->dtpDebCompar)) && (! empty($this->dtpFinCompar))) {
+
+							$this->addLibelle($nChp, $line, true);
+
+							$resultKeys 	  = array_keys($result[$itRes][$addGroup]);
+							$resultComparKeys = array_keys($resultCompar[$itRes][$addGroup]);
+
+							$nbResult = count($result[$itRes][$addGroup]);
+
+							for ($l=0; $l<$nbResult; $l++) {
+
+								if (!in_array($resultKeys[$l], $this->intervals)) {
+									$this->intervals[] = $resultKeys[$l];
+								}
+
+								if (isset($resultComparKeys[$l])) {
+									$this->data[$line]['values'][$resultKeys[$l]]		= $resultCompar[$itRes][$addGroup][$resultComparKeys[$l]];
+									$this->data[$line]['valuesN'][$resultKeys[$l]] 		= $result[$itRes][$addGroup][$resultKeys[$l]];
+								} else {
+									$this->data[$line]['values'][$resultKeys[$l]]		= false;
+									$this->data[$line]['valuesN'][$resultKeys[$l]] 		= 0;
+								}
+							}
+
+							$line++;
+							$nChp++;
+						}
+					}
 				}
 			}
 
-			$line++;
+			$itRes++;
 		}
 
+		// Remplissage des intervals vides
+		$this->checkIntervals();
+
 		// echo '<pre>';
-		// 	//print_r($res);				// Résultats de la requête
+		// 	// print_r($res);				// Résultats de la requête
 		// 	// print_r($this->champs);		// Liste des champs
 		// 	// print_r($this->libelle);		// Liste des colonnes
+		// 	// print_r($resultCompar);
+		// 	// print_r($result);
+		// 	print_r($this->intervals);
 		// 	print_r($this->data);			// Tableau de données formatés
 		// echo '</pre>';
+	}
+
+
+	/**
+	 * Ajout de la config de chaques ligne aux résultats
+	 *
+	 * @param 	integer		$nChp 				Itérateur configuration des champs / ligne
+	 * @param 	integer		$line 				Numéro de la ligne du tableau
+	 * @param 	boolean		$compar				Mode normal ou comparaison N-1
+	 */
+	private function addLibelle($nChp, $line, $compar=false)
+	{
+		$champsKeys = array_keys($this->champs);
+		$champName	= $champsKeys[$nChp];
+
+		$this->data[$line]['name']  = $champName;
+
+		$label 	= $this->champs[$champName]['label'];
+		$type 	= 'normal';
+
+		if ($compar) {
+			$label .= ' N-1';
+			$type	= 'compar';
+		}
+
+		$this->data[$line]['label'] = $label;
+		$this->data[$line]['type']	= $type;
+
+		if (isset($this->champs[$champName]['graph'])  &&  $this->champs[$champName]['graph'] === true) {
+
+			$this->data[$line]['graph'] 		= $this->champs[$champName]['graph'];
+
+			$graphOnLoad = $this->champs[$champName]['graphOnLoad'];	// Affichage du graphique au lancement
+			$color = $this->champs[$champName]['graphColor'];			// Couleur puce & graphique
+
+			if ($compar) {
+				$graphOnLoad = false;
+				$color = $this->pantoneColor($color);
+			}
+
+			$this->data[$line]['graphOnLoad'] 	= $graphOnLoad;
+			$this->data[$line]['graphColor'] 	= $color;
+
+			if (!empty($this->champs[$champName]['graphYAxis'])) {
+				$this->data[$line]['graphYAxis']	= $this->champs[$champName]['graphYAxis'];
+			}
+
+			if (!empty($this->champs[$champName]['graphType'])) {
+				$this->data[$line]['graphType']	= $this->champs[$champName]['graphType'];
+			}
+		}
+
+		if (isset($this->champs[$champName]['group'])  &&  $this->champs[$champName]['group'] === true) {
+			$this->data[$line]['group'] = $this->champs[$champName]['group'];
+		}
+
+		if (isset($this->champs[$champName]['groupLabel'])  &&  $this->champs[$champName]['groupLabel'] != '') {
+			$this->data[$line]['groupLabel'] = $this->champs[$champName]['groupLabel'];
+		}
+
+		if (isset($this->champs[$champName]['groupColor'])  &&  $this->champs[$champName]['groupColor'] != '') {
+			$this->data[$line]['groupColor'] = $this->champs[$champName]['groupColor'];
+		}
+
+		if (! empty($this->champs[$champName]['align'])) {
+			$this->data[$line]['align'] = $this->champs[$champName]['align'];
+		}
+
+		if (isset($this->champs[$champName]['unite'])) {
+			$this->data[$line]['unite'] = $this->champs[$champName]['unite'];
+		}
+
+		if (isset($this->champs[$champName]['decimales'])) {
+			$this->data[$line]['decimales'] = $this->champs[$champName]['decimales'];
+		}
+	}
+
+
+	/**
+	 * Récupération du nom de l'interval dans la timeLine
+	 * Libelle de chaques colonnes
+	 *
+	 * @param  	object		$doc		Document MongoDb
+	 * @return 	string
+	 */
+	private function stepLibelle($doc)
+	{
+		switch($this->stepTimeline) {
+			case 'YEAR' :
+				$stepLib = $doc->_id->year;
+				break;
+			case 'MONTH' :
+				$month = str_pad($doc->_id->month, 2, '0', STR_PAD_LEFT);
+				$stepLib = $doc->_id->year . '-' . $month;
+				break;
+			case 'WEEK' :
+				$week  = 'W' . str_pad($doc->_id->week, 2, '0', STR_PAD_LEFT);
+				$stepLib = $doc->_id->year . '-' . $week;
+				break;
+			case 'DAY' :
+				$month = str_pad($doc->_id->month, 2, '0', STR_PAD_LEFT);
+				$dayOfMonth = str_pad($doc->_id->dayOfMonth, 2, '0', STR_PAD_LEFT);
+				$stepLib = $doc->_id->year . '-' . $month . '-' . $dayOfMonth;
+				break;
+			case 'HOUR' :
+				$stepLib = $doc->_id->hour . ':00';
+				break;
+			case 'int_JOUR' :
+				$stepLib = $this->days[$req[0]->_id->dayOfWeek];
+				break;
+			default :
+				$stepLib = 'Unknown';
+				break;
+		}
+
+		return $stepLib;
 	}
 
 
@@ -1003,5 +1177,29 @@ eof;
 		}
 
 		return $formatDateTimePicker;
+	}
+
+
+	/**
+	 * Permet de compléter les lignes n'ayant pas de valeurs pour tous les intervals par un 0
+	 */
+	private function checkIntervals()
+	{
+		//  Mise en ordre de tous les intervals connus
+		sort($this->intervals);
+
+		$intervals = array();
+		foreach($this->intervals as $interval) {
+			$intervals[$interval] = 0;
+		}
+
+		foreach ($this->data as $line => $val) {
+
+			$this->data[$line]['values'] = array_merge($intervals, $val['values']);
+
+			if (isset($val['valuesN'])) {
+				$this->data[$line]['valuesN'] = array_merge($intervals, $val['valuesN']);
+			}
+		}
 	}
 }
