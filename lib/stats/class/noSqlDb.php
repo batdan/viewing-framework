@@ -312,12 +312,11 @@ class noSqlDb extends base
 			switch ($this->chpDateType)
 			{
 				case 'date' :
-					$gmDateDeb = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_deb'] . ' 00:00:00'));
-					$this->datedeb = MongoUtils::convertType($gmDateDeb, $this->chpDateType);
+					$dateDeb = $_GET['dtp_deb'] . ' 00:00:00';
+					$this->datedeb = MongoUtils::convertType($dateDeb, $this->chpDateType);
 					break;
 
 				case 'datetime' :
-					$gmDateDeb = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_deb']));
 					$this->datedeb = MongoUtils::convertType($_GET['dtp_deb'], $this->chpDateType);
 					break;
 			}
@@ -334,13 +333,12 @@ class noSqlDb extends base
 					$d = new \DateTime($_GET['dtp_fin']);
 					$d->modify('+1 day');
 
-					$gmDateFin = gmdate('d-m-Y H:i:s', $d->getTimestamp());
-					$this->datefin 	= MongoUtils::convertType($gmDateFin, $this->chpDateType);
+					$dateFin = date('d-m-Y H:i:s', $d->getTimestamp());
+					$this->datefin 	= MongoUtils::convertType($dateFin, $this->chpDateType);
 					break;
 
 				case 'datetime' :
-					$gmDateFin = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_fin']));
-					$this->datefin 	= MongoUtils::convertType($gmDateFin, $this->chpDateType);
+					$this->datefin 	= MongoUtils::convertType($_GET['dtp_fin'], $this->chpDateType);
 					break;
 			}
 		}
@@ -354,13 +352,12 @@ class noSqlDb extends base
 				switch ($this->chpDateType)
 				{
 					case 'date' :
-						$gmDateDebCompar = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_deb_compar'] . ' 00:00:00'));
-						$this->datedebCompar = MongoUtils::convertType($gmDateDebCompar, $this->chpDateType);
+						$dateDebCompar = $_GET['dtp_deb_compar'] . ' 00:00:00';
+						$this->datedebCompar = MongoUtils::convertType($dateDebCompar, $this->chpDateType);
 						break;
 
 					case 'datetime' :
-						$gmDateDebCompar = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_deb_compar']));
-						$this->datedebCompar = MongoUtils::convertType($gmDateDebCompar, $this->chpDateType);
+						$this->datedebCompar = MongoUtils::convertType($_GET['dtp_deb_compar'], $this->chpDateType);
 						break;
 				}
 			}
@@ -376,13 +373,12 @@ class noSqlDb extends base
 						$d = new \DateTime($_GET['dtp_fin_compar']);
 						$d->modify('+1 day');
 
-						$gmDateFinCompar = gmdate('d-m-Y H:i:s', $d->getTimestamp());
-						$this->datefinCompar = MongoUtils::convertType($d->format($gmDateFinCompar), $this->chpDateType);
+						$dateFinCompar = date('d-m-Y H:i:s', $d->getTimestamp());
+						$this->datefinCompar = MongoUtils::convertType($d->format($dateFinCompar), $this->chpDateType);
 						break;
 
 					case 'datetime' :
-						$gmDateFin = gmdate('d-m-Y H:i:s', strtotime($_GET['dtp_fin_compar']));
-						$this->datefinCompar = MongoUtils::convertType($gmDateFin, $this->chpDateType);
+						$this->datefinCompar = MongoUtils::convertType($_GET['dtp_fin_compar'], $this->chpDateType);
 						break;
 				}
 			}
@@ -1185,7 +1181,10 @@ eof;
 	 */
 	private function checkIntervals()
 	{
-		//  Mise en ordre de tous les intervals connus
+		// Remise en ordre croissant des libellés
+		ksort($this->libelle);
+
+		// Mise en ordre de tous les intervals connus
 		sort($this->intervals);
 
 		$intervals = array();
