@@ -572,6 +572,27 @@ eof;
 
 		$line=0;
 
+		// Affichage dans le graphique des totaux
+		if ($this->ligneTotaux) {
+			$dataChartSeries[$line]['name'] 	= $this->ligneTotauxConf['libelle'];
+			$dataChartSeries[$line]['visible']	= false;
+			$dataChartSeries[$line]['color']	= '#777';
+			$dataChartSeries[$line]['data'] 	= $this->calcTotaux('normal', 0);
+
+			$line++;
+
+			// Affichage dans le graphique des totaux N-1
+			if ($this->compar) {
+
+				$dataChartSeries[$line]['name'] 	= $this->ligneTotauxConf['libelle'] . ' N-1';
+				$dataChartSeries[$line]['visible']	= false;
+				$dataChartSeries[$line]['color']	= '#333';
+				$dataChartSeries[$line]['data'] 	= $this->calcTotaux('compar', 0);
+
+				$line++;
+			}
+		}
+
 		foreach ($this->data as $k=>$v) {
 
 			if (isset($v['values']) && isset($v['graph'])  &&  $v['graph'] === true) {
@@ -580,11 +601,13 @@ eof;
 				$dataChartSeries[$line]['visible']	= $v['graphOnLoad'];
 				$dataChartSeries[$line]['color']	= $v['graphColor'];
 
-				if(!empty($v['graphYAxis']))
+				if (!empty($v['graphYAxis'])) {
 					$dataChartSeries[$line]['yAxis']	= $v['graphYAxis'];
+				}
 
-				if(!empty($v['graphType']))
-				$dataChartSeries[$line]['type']	= $v['graphType'];
+				if (!empty($v['graphType'])){
+					$dataChartSeries[$line]['type']		= $v['graphType'];
+				}
 
 				// Passage des chiffres en entier pour le graphique
 				$formData = array();
@@ -593,13 +616,49 @@ eof;
 					$formData[] = round($v2, 2);
 				}
 
-				$dataChartSeries[$line]['data'] 	= array_values($formData);
+				$dataChartSeries[$line]['data'] = array_values($formData);
 
 				$line++;
 			}
 		}
 
 		return json_encode($dataChartSeries);
+	}
+
+
+	/**
+	 * Calcul des totaux
+	 *
+	 * @param 	string 		$type 		Type : normal | compar
+	 * @param 	integer		$decimal 	Nombre de décimales
+	 *
+	 * @return	array
+	 */
+	private function calcTotaux($type, $decimal)
+	{
+		$libelleKeys = array_keys($this->libelle);
+
+
+		$calcul	= $this->ligneTotauxConf['calcul'];
+		$totaux = array();
+
+		foreach ($libelleKeys as $libelleKey)
+		{
+			$columnValue = array();
+
+			foreach ($this->data as $val) {
+
+				if ($val['type'] == $type && $val['values']) {
+					$columnValue[] = $val['values'][$libelleKey];
+				}
+			}
+
+			if (is_callable(array($this, $calcul))) {
+				$totaux[] = round($this->{$calcul}($columnValue), $decimal);
+			}
+		}
+
+		return $totaux;
 	}
 
 
@@ -1147,7 +1206,6 @@ eof;
 				$value = 'Erreur action';
 
 			}
-
 
 			$html .= '<td ' . $this->buildAttrs($attrs) . '>'.$value.$unite.'</td>' . chr(10);
 		}
