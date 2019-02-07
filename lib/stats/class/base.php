@@ -583,7 +583,7 @@ eof;
 			$line++;
 
 			// Affichage dans le graphique des totaux N-1
-			if ($this->compar) {
+			if ($this->compar === true) {
 
 				$dataChartSeries[$line]['name'] 	= $this->ligneTotauxConf['libelle'] . ' N-1';
 				$dataChartSeries[$line]['visible']	= false;
@@ -638,7 +638,6 @@ eof;
 	private function calcTotaux($type, $decimal)
 	{
 		$libelleKeys = array_keys($this->libelle);
-
 
 		$calcul	= $this->ligneTotauxConf['calcul'];
 		$totaux = array();
