@@ -574,6 +574,7 @@ eof;
 
 		// Affichage dans le graphique des totaux
 		if ($this->ligneTotaux) {
+
 			$dataChartSeries[$line]['name'] 	= $this->ligneTotauxConf['libelle'];
 			$dataChartSeries[$line]['visible']	= false;
 			$dataChartSeries[$line]['color']	= '#777';
@@ -1204,7 +1205,6 @@ eof;
 			} else {
 
 				$value = 'Erreur action';
-
 			}
 
 			$html .= '<td ' . $this->buildAttrs($attrs) . '>'.$value.$unite.'</td>' . chr(10);
