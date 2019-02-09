@@ -14,6 +14,7 @@ use core\libIncluderList;
 class base
 {
 	/**
+	 * Type de graphique : array, sql, noSql
 	 * @var string
 	 */
 	protected $type;
@@ -91,6 +92,7 @@ class base
 	 */
 	public function __construct(array $options = array())
 	{
+		// Configuration du graphique
 		$options = array_merge($this->getDefaultOptions(), $options);
         $this->initOptions($options);
 
@@ -99,14 +101,17 @@ class base
 
         $this->action = $this->getParam($this->getUrlKey(), 'display');
 
+		// Librairies JS & CSS à charger
 		libIncluderList::add_bootstrapSelect();
 		libIncluderList::add_bootstrapDatetimepicker();
 		libIncluderList::add_highCharts();
 
+		// Scripts JS & CSS à charger
 		libIncluder::add_CssLib("/vendor/vw/framework/lib/stats/css/stats.css");
 		libIncluder::add_JsScript("$('[data-tooltip]').tooltip();");
 
-		if ($this->graph) {
+		// Chargement des scripts liées au grahique
+		if ($this->graph && count($this->data) > 0) {
 			libIncluder::add_JsScript($this->dataChartJs());
 		}
 	}
@@ -284,14 +289,45 @@ class base
 			$html .= '<div id="div_' . $this->id . '" class="stats" style="width:' . $this->width .'">' . chr(10);
 		}
 
-		if (($this->type == 'array')  ||  (isset($_GET['dtp_deb']) && isset($_GET['dtp_fin']) && isset($_GET['stepTimeline'])) ) {
+		// On vérifie que toutes les conditions soient réunies avant d'afficher la statistique
+		$affStat = false;
+
+		// Stats de la class "vw\stats\data" sans activation de la recherche par dates
+		if ($this->type == 'array' && $this->activSearch === false) {
+			$affStat = true;
+		} else {
+			if ($this->compar) {
+				if (!empty($this->dtpDeb) && !empty($this->dtpFin) && !empty($this->dtpFinCompar) && !empty($this->dtpFinCompar)) {
+					if ($this->type == 'array') {
+						$affStat = true;
+					} else {
+						if (!empty($this->stepTimeline)) {
+							$affStat = true;
+						}
+					}
+				}
+			} else {
+				if (!empty($this->dtpDeb) && !empty($this->dtpFin)) {
+					if ($this->type == 'array') {
+						$affStat = true;
+					} else {
+						if (!empty($this->stepTimeline)) {
+							$affStat = true;
+						}
+					}
+				}
+			}
+		}
+
+		// Toutes le conditions sont réunies, la stat est affichée
+		if ($affStat === true) {
 
 			// Affichage du titre
 			if (!empty($this->title)) {
 				$html .= '<h1 style="margin-top:10px;">' . ucfirst($this->title) . '</h1>' . chr(10);
 			}
 
-			// Affichichage de la description
+			// Affichage de la description
 			if (!empty($this->description)) {
 				$html .= '<div class="desc_H1">' . ucfirst($this->description) . '</div>' . chr(10);
 			}
@@ -335,6 +371,9 @@ class base
 		return $html;
 	}
 
+	/**
+	 * Possibilité d'ajouter un script JS en CallBack
+	 */
 	protected function renderJs()
 	{
 		if (is_callable($this->jsIncludeCallback)) {
@@ -342,11 +381,19 @@ class base
 		}
 	}
 
+	/**
+	 * Retourne un script JS à appeler avant l'affichage de la table (en construction)
+	 * @return string
+	 */
 	protected function beforeRenderTable()
 	{
 
 	}
 
+	/**
+	 * Retourne un script JS à appeler après l'affichage de la table
+	 * @return string
+	 */
 	protected function afterRenderTable()
 	{
 		return $this->renderJs();
@@ -355,7 +402,6 @@ class base
 
 	/**
 	 * Création du code JS pour l'affichage du graphique
-	 *
 	 * @return string
 	 */
 	protected function dataChartJs()
@@ -1454,5 +1500,101 @@ eof;
 	{
 		$r = new renderer($this);
 		return $r->render();
+	}
+
+
+	/**
+	 * Lien pour passer en recherche de statistique sans comparaison
+	 */
+	protected function affLinkNormal()
+	{
+		if ($this->compar === true) {
+
+			$url  = explode('?', $_SERVER['REQUEST_URI']);
+			$file = $url[0];
+
+			if (count($url) > 1  &&  !empty($url[1])) {
+
+				$get  = explode('&', $url[1]);
+
+				$newGet = array();
+				$delete = array(
+					'compar',
+					'dtp_deb_compar',
+					'dtp_fin_compar');
+
+				foreach ($get as $v) {
+					$k = explode('=', $v);
+
+					if (!in_array($k[0], $delete)) {
+						$newGet[] = $v;
+					}
+				}
+
+				$affNewGet = '';
+				if (count($newGet) > 0)  {
+					$affNewGet = '?' . implode('&', $newGet);
+				}
+
+				$html = '<a href="' . $file . $affNewGet . '">Normal</a>';
+			} else {
+				$html = '<a href="' . $_SERVER['REQUEST_URI'] . '">Normal</a>';
+			}
+
+		} else {
+			$html = 'Normal';
+		}
+
+		return $html;
+	}
+
+
+	/**
+	 * Lien pour passer en recherche de statistique avec comparaison
+	 */
+	protected function affLinkCompar()
+	{
+		if ($this->compar === true) {
+
+			$html = 'Comparaison';
+
+		} else {
+
+			$url  = explode('?', $_SERVER['REQUEST_URI']);
+			$file = $url[0];
+
+			if (count($url) > 1  &&  !empty($url[1])) {
+
+				$get = explode('&', $url[1]);
+
+				if (!in_array('compar', $get)) {
+					$get[] = 'compar=1';
+				}
+
+				$get = implode('&', $get);
+
+				$html = '<a href="' . $file . '?' . $get . '">Comparaison</a>';
+			} else {
+				$html = '<a href="' . $_SERVER['REQUEST_URI'] . '?compar=1">Comparaison</a>';
+			}
+		}
+
+		return $html;
+	}
+
+
+	/**
+	 * Format dateTimePicker
+	 */
+	protected function formatDateTimePicker()
+	{
+		switch ($this->chpDateType)
+		{
+			case 'date'		: $formatDateTimePicker = 'YYYY-MM-DD';			break;
+			case 'time'		: $formatDateTimePicker = 'HH:mm';				break;
+			default			: $formatDateTimePicker = 'YYYY-MM-DD HH:mm';
+		}
+
+		return $formatDateTimePicker;
 	}
 }

@@ -4,7 +4,7 @@ namespace vw\stats;
 use core\libIncluder;
 
 /**
- * Création d'une statisque sur la base d'un tableau PHP
+ * Création d'une statistique sur la base d'un tableau PHP
  *
  * @author Daniel Gomes
  */
@@ -16,9 +16,6 @@ class data extends base
 	protected $data;
 	protected $compar = false;	// Boolean : mode normal ou comparaison
 
-	protected $dtpDeb;			// Champ de recherche : début plage
-	protected $dtpFin;			// Champ de recherche : fin plage
-
 	protected $datedeb;			// Date début au format 	: yyyy-mm-dd
 	protected $datefin;			// Date fin au format  		: yyyy-mm-dd
 
@@ -29,6 +26,11 @@ class data extends base
 
 	protected $htmlEndForm='';
 	protected $htmlEndLink='';
+
+	protected $dtpDeb;			// Champ de recherche : début plage
+	protected $dtpFin;			// Champ de recherche : fin plage
+	protected $dtpDebCompar;	// Champ de recherche : début plage (comparaison)
+	protected $dtpFinCompar;	// Champ de recherche : fin plage (comparaison)
 
 	protected $activSearch;		// Activation du moteur de recherche par date
 
@@ -54,7 +56,6 @@ class data extends base
 
 			'dtpDeb'			=> '',
 			'dtpFin'			=> '',
-
 			'dtpDebCompar'		=> '',
 			'dtpFinCompar'		=> '',
 		));
@@ -80,6 +81,7 @@ class data extends base
 
 		$this->activSearch 	= $options['activSearch'];
 
+		// Récupération des variables GET
 		$this->checkGET();
 	}
 
@@ -284,95 +286,5 @@ eof;
 		} else {
 			$this->htmlCompar = '';
 		}
-	}
-
-
-	/**
-	 * Lien pour passer en recherche de statistique sans comparaison
-	 */
-	private function affLinkNormal()
-	{
-		if ($this->compar === true) {
-
-			$url  = explode('?', $_SERVER['REQUEST_URI']);
-			$file = $url[0];
-
-			if (count($url) > 1  &&  $url[1] != '') {
-
-				$get  = explode('&', $url[1]);
-
-				$newGet = array();
-				$delete = array('compar', 'dtp_deb_compar', 'dtp_fin_compar');
-
-				foreach ($get as $v) {
-					$k = explode('=', $v);
-
-					if (! in_array($k[0], $delete)) {
-						$newGet[] = $v;
-					}
-				}
-
-				$newGet = implode('&', $newGet);
-
-				$html = '<a href="' . $file . '?' . $newGet . '">Normal</a>';
-			} else {
-				$html = '<a href="' . $_SERVER['REQUEST_URI'] . '">Normal</a>';
-			}
-
-		} else {
-			$html = 'Normal';
-		}
-
-		return $html;
-	}
-
-
-	/**
-	 * Lien pour passer en recherche de statistique avec comparaison
-	 */
-	private function affLinkCompar()
-	{
-		if ($this->compar === true) {
-
-			$html = 'Comparaison';
-
-		} else {
-
-			$url  = explode('?', $_SERVER['REQUEST_URI']);
-			$file = $url[0];
-
-			if (count($url) > 1  &&  $url[1] != '') {
-
-				$get = explode('&', $url[1]);
-
-				if (! in_array('compar', $get)) {
-					$get[] = 'compar=1';
-				}
-
-				$get = implode('&', $get);
-
-				$html = '<a href="' . $file . '?' . $get . '">Comparaison</a>';
-			} else {
-				$html = '<a href="' . $_SERVER['REQUEST_URI'] . '?compar=1">Comparaison</a>';
-			}
-		}
-
-		return $html;
-	}
-
-
-	/**
-	 * Format dateTimePicker
-	 */
-	protected function formatDateTimePicker()
-	{
-		switch ($this->chpDateType)
-		{
-			case 'date'		: $formatDateTimePicker = 'YYYY-MM-DD';			break;
-			case 'time'		: $formatDateTimePicker = 'HH:mm';				break;
-			default			: $formatDateTimePicker = 'YYYY-MM-DD HH:mm';
-		}
-
-		return $formatDateTimePicker;
 	}
 }

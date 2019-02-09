@@ -6,7 +6,7 @@ use core\mongoDbSingleton;
 use backoffice\bdd\MongoUtils;
 
 /**
- * Création d'une statisque sur la base d'une requête MongoDb
+ * Création d'une statistique sur la base d'une requête MongoDb
  *
  * @author Daniel Gomes
  */
@@ -185,7 +185,7 @@ class noSqlDb extends base
 	protected function initOptions($options)
 	{
 		parent::initOptions($options);
-		$this->type			= 'sql';
+		$this->type = 'noSql';
 
 		if (isset($_GET['compar'])) {
 			$this->compar = true;
@@ -217,8 +217,10 @@ class noSqlDb extends base
 		$this->stepTimeline		= $options['stepTimeline'];
 		$this->stepActiv		= $options['stepActiv'];
 
+		// Récupération des variables GET
 		$this->checkGET();
 
+		// Le calcul des datas de la statistique ne se font que si toutes les conditions sont réunies
 		if ($this->compar) {
 			if (	!empty($this->dtpDeb)
 				&&	!empty($this->dtpFin)
@@ -1102,92 +1104,6 @@ eof;
 		} else {
 			$this->htmlCompar = '';
 		}
-	}
-
-
-	/**
-	 * Lien pour passer en recherche de statistique sans comparaison
-	 */
-	private function affLinkNormal()
-	{
-		if ($this->compar === true) {
-			$url  = explode('?', $_SERVER['REQUEST_URI']);
-			$file = $url[0];
-
-			if (count($url) > 1  &&  $url[1] != '') {
-
-				$get  = explode('&', $url[1]);
-
-				$newGet = array();
-				$delete = array('compar', 'dtp_deb_compar', 'dtp_fin_compar');
-
-				foreach ($get as $v) {
-					$k = explode('=', $v);
-
-					if (! in_array($k[0], $delete)) {
-						$newGet[] = $v;
-					}
-				}
-
-				$newGet = implode('&', $newGet);
-
-				$html = '<a href="' . $file . '?' . $newGet . '">Normal</a>';
-			} else {
-				$html = '<a href="' . $_SERVER['REQUEST_URI'] . '">Normal</a>';
-			}
-
-		} else {
-			$html = 'Normal';
-		}
-
-		return $html;
-	}
-
-
-	/**
-	 * Lien pour passer en recherche de statistique avec comparaison
-	 */
-	private function affLinkCompar()
-	{
-		if ($this->compar === true) {
-			$html = 'Comparaison';
-		} else {
-			$url  = explode('?', $_SERVER['REQUEST_URI']);
-			$file = $url[0];
-
-			if (count($url) > 1  &&  $url[1] != '') {
-
-				$get = explode('&', $url[1]);
-
-				if (! in_array('compar', $get)) {
-					$get[] = 'compar=1';
-				}
-
-				$get = implode('&', $get);
-
-				$html = '<a href="' . $file . '?' . $get . '">Comparaison</a>';
-			} else {
-				$html = '<a href="' . $_SERVER['REQUEST_URI'] . '">Comparaison</a>';
-			}
-		}
-
-		return $html;
-	}
-
-
-	/**
-	 * Format dateTimePicker
-	 */
-	protected function formatDateTimePicker()
-	{
-		switch ($this->chpDateType)
-		{
-			case 'date'		: $formatDateTimePicker = 'YYYY-MM-DD';			break;
-			case 'time'		: $formatDateTimePicker = 'HH:mm';				break;
-			default			: $formatDateTimePicker = 'YYYY-MM-DD HH:mm';
-		}
-
-		return $formatDateTimePicker;
 	}
 
 
