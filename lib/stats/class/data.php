@@ -90,77 +90,21 @@ class data extends base
 	private function checkGET()
 	{
 		if (isset($_GET['dtp_deb'])) {
-
 			$this->dtpDeb = $_GET['dtp_deb'];
-
-			switch ($this->chpDateType)
-			{
-				case 'date' :
-					$this->datedeb = $_GET['dtp_deb'] . ' 00:00:00';
-					break;
-
-				case 'datetime' :
-					$this->datedeb = $_GET['dtp_deb'];
-					break;
-			}
 		}
 
 		if (isset($_GET['dtp_fin'])) {
-
 			$this->dtpFin = $_GET['dtp_fin'];
-
-			switch ($this->chpDateType)
-			{
-				case 'date' :
-					// Ajoute d'un jour à la date de fin pour que la date demandée soit incluse
-					$d = new \DateTime($_GET['dtp_fin']);
-					$d->modify('+1 day');
-
-					$this->datefin = $d->format('d-m-Y H:i:s');
-					break;
-
-				case 'datetime' :
-					$this->datefin 	= $_GET['dtp_fin'];
-					break;
-			}
 		}
 
 		if ($this->compar === true) {
 
 			if (isset($_GET['dtp_deb_compar'])) {
-
 				$this->dtpDebCompar = $_GET['dtp_deb_compar'];
-
-				switch ($this->chpDateType)
-				{
-					case 'date' :
-						$this->datedebCompar = $_GET['dtp_deb_compar'] . ' 00:00:00';
-						break;
-
-					case 'datetime' :
-						$this->datedebCompar = $_GET['dtp_deb_compar'];
-						break;
-				}
 			}
 
 			if (isset($_GET['dtp_fin_compar'])) {
-
 				$this->dtpFinCompar = $_GET['dtp_fin_compar'];
-
-				switch ($this->chpDateType)
-				{
-					case 'date' :
-						// Ajoute d'un jour à la date de fin pour que la date demandée soit incluse
-						$d = new \DateTime($_GET['dtp_fin_compar']);
-						$d->modify('+1 day');
-
-						$this->datefinCompar = $d->format('d-m-Y H:i:s');
-						break;
-
-					case 'datetime' :
-						$this->datefinCompar = $_GET['dtp_fin_compar'];
-						break;
-				}
 			}
 		}
 	}

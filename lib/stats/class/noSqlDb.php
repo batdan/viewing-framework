@@ -219,8 +219,23 @@ class noSqlDb extends base
 
 		$this->checkGET();
 
-		if (isset($_GET['dtp_deb']) && isset($_GET['dtp_fin']) && isset($_GET['stepTimeline'])) {
-			$this->setData();
+		if ($this->compar) {
+			if (	!empty($this->dtpDeb)
+				&&	!empty($this->dtpFin)
+				&&	!empty($this->dtpFinCompar)
+				&&	!empty($this->dtpFinCompar)
+				&& 	!empty($this->stepTimeline)
+			) {
+				$this->setData();
+			}
+		} else {
+			if (
+					!empty($this->dtpDeb)
+				&& 	!empty($this->dtpFin)
+				&& 	!empty($this->stepTimeline)
+			) {
+				$this->setData();
+			}
 		}
 	}
 
