@@ -694,7 +694,13 @@ eof;
 
 			foreach ($this->data as $val) {
 
-				if ($val['type'] == $type && $val['values']) {
+				if (isset($val['type'])) {
+					$confType = $val['type'];
+				} else {
+					$confType = 'normal';
+				}
+
+				if ($confType == $type && isset($val['values'])) {
 					$columnValue[] = $val['values'][$libelleKey];
 				}
 			}
