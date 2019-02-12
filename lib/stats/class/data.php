@@ -34,6 +34,8 @@ class data extends base
 
 	protected $activSearch;		// Activation du moteur de recherche par date
 
+	protected $addFormElements;	// Possibilité d'ajouter des éléments de formulaire pour composer la requête
+
 
 	public function sethtmlEndForm($htmlEndForm)
 	{
@@ -58,6 +60,8 @@ class data extends base
 			'dtpFin'			=> '',
 			'dtpDebCompar'		=> '',
 			'dtpFinCompar'		=> '',
+
+			'addFormElements'	=> array(),
 		));
 	}
 
@@ -76,10 +80,12 @@ class data extends base
 			$this->compar = true;
 		}
 
-		$this->data 		= $options['data'];
-		$this->chpDateType 	= $options['chpDateType'];
+		$this->data 			= $options['data'];
+		$this->chpDateType 		= $options['chpDateType'];
 
-		$this->activSearch 	= $options['activSearch'];
+		$this->activSearch 		= $options['activSearch'];
+		
+		$this->addFormElements 	= $options['addFormElements'];
 
 		// Récupération des variables GET
 		$this->checkGET();
@@ -164,7 +170,7 @@ eof;
 
 		$addHiddenInput = array();
 		foreach($_GET as $name => $value) {
-			if (!in_array($name, $inputStats)) {
+			if (!in_array($name, $inputStats) && !in_array($name, $this->addFormElements)) {
 				$addHiddenInput[] = '<input type="hidden" name="'.$name.'" value="'.$value.'">';
 			}
 		}

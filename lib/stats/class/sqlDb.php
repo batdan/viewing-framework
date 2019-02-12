@@ -93,6 +93,8 @@ class sqlDb extends base
 	protected $linkNormal;		// Lien moteur de recherche sans comparaison
 	protected $linkCompar;		// Lien moteur de recherche avec comparaison
 
+	protected $addFormElements;	// Possibilité d'ajouter des éléments de formulaire pour composer la requête
+
 
 	public function sethtmlEndForm($htmlEndForm)
 	{
@@ -159,6 +161,8 @@ class sqlDb extends base
 				'dtpFin'			=> '',
 				'dtpDebCompar'		=> '',
 				'dtpFinCompar'		=> '',
+
+				'addFormElements'	=> array(),
 			)
 		);
 	}
@@ -197,6 +201,9 @@ class sqlDb extends base
 
 		$this->stepTimeline		= $options['stepTimeline'];
 		$this->stepActiv		= $options['stepActiv'];
+
+		$this->addFormElements 	= $options['addFormElements'];
+
 
 		// Récupération des variables GET
 		$this->checkGET();
@@ -814,7 +821,7 @@ eof;
 
 		$addHiddenInput = array();
 		foreach($_GET as $name => $value) {
-			if (!in_array($name, $inputStats)) {
+			if (!in_array($name, $inputStats) && !in_array($name, $this->addFormElements)) {
 				$addHiddenInput[] = '<input type="hidden" name="'.$name.'" value="'.$value.'">';
 			}
 		}
