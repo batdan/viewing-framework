@@ -69,11 +69,11 @@ class base
 
             $this->_typeFlux = 'json';
 
-            if (isset($_GET['limit'])) {
-                $this->_limit   = $_GET['limit'];
+            if (isset($_GET['offset']) && is_numeric($_GET['offset'])) {
+                $this->_offset  = intval($_GET['offset']);
             }
-            if (isset($_GET['offset'])) {
-                $this->_offset  = $_GET['offset'];
+            if (isset($_GET['limit']) && is_numeric($_GET['limit'])) {
+                $this->_limit   = intval($_GET['limit']);
             }
             if (isset($_GET['order'])) {
                 $this->_order   = $_GET['order'];
@@ -122,6 +122,11 @@ class base
                     'buttonCsv'                     => true,
 
                     'bddName'                       => 'default',
+
+                    'mongoConf'                     => 'default',
+                    'mongoCollection'               => '',
+                    'mongoOptions'		            => array('allowDiskUse' => true),
+
                     'req'                           => '',
                     'dataSet'                       => '',
 
@@ -166,6 +171,11 @@ class base
         $this->_buttonCsv               = $options['buttonCsv'];
 
         $this->_bddName                 = $options['bddName'];
+
+        $this->_mongoConf               = $options['mongoConf'];
+        $this->_mongoCollection         = $options['mongoCollection'];
+        $this->_mongoOptions            = $options['mongoOptions'];
+
         $this->_req                     = $options['req'];
         $this->_dataSet                 = $options['dataSet'];
 

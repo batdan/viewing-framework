@@ -1,12 +1,14 @@
 <?php
 namespace table;
 
+use core\dbSingleton;
 use PHPSQLParser\PHPSQLParser;
 use PHPSQLParser\PHPSQLCreator;
 
 /**
  * Bootstrap Table
- * Gestion des tables d'une base de donnée - méthode MySQL
+ * Gestion des tables d'une base de données
+ * Méthode MySQL
  *
  * @author Daniel Gomes
  */
@@ -27,11 +29,10 @@ class sql extends ajax
     public function __construct(array $options = array())
     {
         $options['data-side-pagination'] ='server';
-
         parent::__construct($options);
 
         // Instance PDO
-		$this->_dbh = \core\dbSingleton::getInstance($this->_bddName);
+		$this->_dbh = dbSingleton::getInstance($this->_bddName);
     }
 
 
@@ -68,9 +69,6 @@ class sql extends ajax
         // Instance PHPSQLCreator
         $creator = new PHPSQLCreator($parsed);
 
-        // Comptage du nombre de lignes
-        $this->countResult($parsed);
-
         // SEARCH
         if (! empty($this->_search) || (isset($parsed['WHERE']) && count($parsed['WHERE']) > 0)) {
             if (isset($parsed['WHERE']) && count($parsed['WHERE']) > 0) {
@@ -86,6 +84,11 @@ class sql extends ajax
 
             // Comptage du nombre de lignes
             $this->countResult($parsed, $req);
+
+        } else {
+
+            // Comptage du nombre de lignes
+            $this->countResult($parsed);
         }
 
         // ORDER BY
