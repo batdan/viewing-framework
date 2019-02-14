@@ -49,44 +49,26 @@ class noSql extends ajax
      */
     public function __construct(array $options = array())
     {
+        // Configuration du tableau
         $options['data-side-pagination'] ='server';
         parent::__construct($options);
 
-        // Instance MongoDb
+        // Connexion à une collection MongoDb
+        $this->connectCollection();
+    }
+
+
+    /**
+     * Création d'une instance MongoDb et connexion à une bdd.collection
+     */
+    private function connectCollection()
+    {
         try {
 			$mongoInstance = mongoDbSingleton::getInstance($this->_mongoConf);
             $this->_connectCollection = $mongoInstance->{$this->_mongoCollection};
 		} catch (\Exception $e) {
 			echo $e->getMessage;
 		}
-
-        // Exécution de la requête | pipeline
-        // $res = $this->_connectCollection->aggregate(
-        //     $this->_req,
-        //     $this->_mongoOptions
-        // );
-
-        // $result = array();
-        // $i = 0;
-        // foreach ($res as $k => $v) {
-        //     foreach ($v as $k2 => $v2) {
-        //         $result[$i][$k2] = $v2;
-        //     }
-        //
-        //     $i++;
-        // }
-
-        // echo '<pre>';
-        //     echo $this->_mongoConf . chr(10) . '<br>';
-        //     print_r($this->_req);
-        //     print_r($this->_mongoOptions);
-        //     print_r($result);
-        // echo '</pre>';
-
-        // $this->countResult();
-        // $this->setChamps();
-        // $this->offsetLimitResult();
-        // $this->setData();
     }
 
 
@@ -105,7 +87,7 @@ class noSql extends ajax
         }
 
         // echo '<pre>';
-        //     print_r($this->_champs);
+        // print_r($this->_champs);
         // echo '</pre>';
     }
 
@@ -115,34 +97,14 @@ class noSql extends ajax
      */
     protected function setData()
     {
-        // Liste des champs demandés de la requête
+        // Récupération de la liste des champs demandés de la requête
         $this->setChamps();
 
-        // SEARCH
-        // if (! empty($this->_search) || (isset($parsed['WHERE']) && count($parsed['WHERE']) > 0)) {
-        //     if (isset($parsed['WHERE']) && count($parsed['WHERE']) > 0) {
-        //         $where = $parsed['WHERE'];
-        //     } else {
-        //         $where = array();
-        //     }
-        //
-        //     $parsed['WHERE'] = $this->setSearch($where);
-        //
-        //     $creator = new PHPSQLCreator($parsed);
-        //     $req = $creator->created;
-        //
-        //     // Comptage du nombre de lignes
-        //     $this->countResult($parsed, $req);
-        //
-        // } else {
-        //
-        //     // Comptage du nombre de lignes
-        //     $this->countResult();
-        // }
+        // Moteur de recherche multi-critères
+        // $this->setSearch();
 
-        // Comptage du nombre de lignes - A VIRER APRES AVOIR DECOMMENTE 'SEARCH'
+        // Comptage du nombre de lignes
         $this->countResult();
-        ////////////////////////////////////////////////////////////////////////
 
         // ORDER BY
         // $parsed['ORDER'][0] = $this->setOrder();
@@ -151,23 +113,11 @@ class noSql extends ajax
         $this->offsetLimitResult();
 
         // Mise en forme des résultats
-        $res = $this->_connectCollection->aggregate(
-            $this->_req,
-            $this->_mongoOptions
-        );
+        $this->getResults();
 
-        $i=0;
-        foreach ($res as $k => $v) {
-            foreach ($v as $k2 => $v2) {
-                $this->_rows[$i][$k2] = $v2;
-            }
-
-            $i++;
-        }
-
-        // echo '<pre>';
-        // print_r($this->_rows);
-        // echo '</pre>';
+        echo '<pre>';
+        error_log(json_encode($this->_req));
+        echo '</pre>';
     }
 
 
@@ -219,18 +169,13 @@ class noSql extends ajax
 
         // Nombre de résultats
         $this->_total = $res[0]['myCount'];
-
-        // echo '<pre>';
-        //     print_r($reqCount);
-        //     echo 'Total résultats : ' . $this->_total . chr(10) . '<br>';
-        // echo '</pre>';
     }
 
 
     /**
      * Autocomplétion de la requête pour la gestion du ORDER BY
      */
-    protected function setOrder()
+    private function setOrder()
     {
         if (empty($this->_sort)) {
             $order = 'ASC';
@@ -255,93 +200,54 @@ class noSql extends ajax
     /**
      * Autocomplétion de la requête pour le moteur de recherche multi-champs
      */
-    protected function setSearch($where)
+    private function setSearch()
     {
-        // Création de la partie de la close where pour le moteur de recherche
-        $addWhere = array();
+        if (isset($this->_search) && $this->_search != '') {
 
-        $i=0;
-        $a=1;
-        $addWhereTxt = '';
-
-        foreach ($this->_champs as $k=>$v) {
-
-            $addWhereTxt .= $v;
-            $addWhere[$i] = array (
-                                'expr_type' => 'colref',
-                                'base_expr' => $v,
-                                'no_quotes' => array (
-                                                    'delim' => false,
-                                                    'parts' => array ($v),
-                                ),
-                                'sub_tree' => false,
-            );
-            $i++;
-
-            $addWhereTxt .= " LIKE ";
-            $addWhere[$i] = array (
-                'expr_type' => 'operator',
-                'base_expr' => 'LIKE',
-                'sub_tree'  => false,
-            );
-            $i++;
-
-            $addWhereTxt .= "'%" . $this->_search . "%'";
-            $addWhere[$i] = array (
-                'expr_type' => 'const',
-                'base_expr' => "'%" . $this->_search . "%'",
-                'sub_tree'  => false,
-            );
-            $i++;
-
-            if ($a < count($this->_champs)) {
-
-                $addWhereTxt .= " OR ";
-                $addWhere[$i] = array (
-                    'expr_type' => 'operator',
-                    'base_expr' => 'OR',
-                    'sub_tree'  => false,
-                );
-                $i++;
+            // Like %search% sur tous les champs de la requête
+            $allLikes = array();
+            foreach ($this->_champs as $champ) {
+                $allLikes[$champ] =  '/' . $this->_search . '/';
             }
 
-            $a++;
-        }
-
-        // On vérifie si une close where était déjà présente, auquel cas il faut concaténer
-        $countWhere = count($where);
-
-        if ($countWhere > 0) {
-
-            $i=$countWhere;
-
-            $where[$i] = array (
-                'expr_type' => 'operator',
-                'base_expr' => 'AND',
-                'sub_tree'  => false,
-            );
-            $i++;
-
-            $where[$i] = array (
-                'expr_type' => 'bracket_expression',
-                'base_expr' => '(' . $addWhereTxt . ')',
-                'sub_tree'  => $addWhere,
+            // Ajout de la recherche multi-critères
+            $addMatch = array(
+                '$or' => array(
+                    $allLikes
+                )
             );
 
-        } else {
+            // Boucle pour retrouver le bloc '$match' s'il existe
+            $matchUpdate = false;
 
-            $i=0;
-            $where = $addWhere;
+
+            foreach ($this->_req as $key => $val) {
+
+                foreach ($val as $k => $v) {
+
+                    // On complète le bloc '$match'
+                    if ($k == '$match') {
+                        $this->_req[$key]['$match'][] = $addMatch;
+                        $matchUpdate = true;
+                    }
+                }
+            }
+
+            // Le bloc '$match' n'existait pas, on l'ajoute
+            if ($matchUpdate === false) {
+                $this->_req[]['$match'][] = $addMatch;
+            }
+
         }
 
-        return $where;
+        error_log(json_encode($this->_req));
     }
 
 
     /**
      * Retourne un nombre de lignes limité par l'offset et le limit
      */
-    protected function offsetLimitResult()
+    private function offsetLimitResult()
     {
         if (is_int($this->_offset) && is_int($this->_limit)) {
 
@@ -382,6 +288,33 @@ class noSql extends ajax
 
         // echo '<pre>';
         // print_r($this->_req);
+        // echo '</pre>';
+    }
+
+
+    /**
+     * Execution & formatage des résultats de la requête
+     */
+    private function getResults()
+    {
+        // Exécution de la requête
+        $res = $this->_connectCollection->aggregate(
+            $this->_req,
+            $this->_mongoOptions
+        );
+
+        // Formatage des résultats
+        $i=0;
+        foreach ($res as $k => $v) {
+            foreach ($v as $k2 => $v2) {
+                $this->_rows[$i][$k2] = $v2;
+            }
+
+            $i++;
+        }
+
+        // echo '<pre>';
+        // print_r($this->_rows);
         // echo '</pre>';
     }
 
