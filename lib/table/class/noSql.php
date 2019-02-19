@@ -32,16 +32,37 @@ class noSql extends ajax
     protected $_connectCollection;
 
     /**
-     * Options MongoDb
+     * Type de configuration de la requête :
+     *      - 'simple' : filtre simple sur la liste des champs retournés
+     *          - $_mongoFields  : array contenant la liste des champs à retourner
+     *
+     *      - 'custom' : Création d'une requête Mongo 'find' avec ses filtres et options
+     *          - $_mongoFilters : array contenant les filtres de la requête 'find'
+     *          - $_mongoOptions : array contenant les options de la requête 'find'
+     * @var string
+     */
+    protected $_mongoReqType;
+
+    /**
+     * Tableau contenant les champs à retournés
+     * Nécessaire si $this->_mongoReqType est en mode 'simple'
+     * @var array
+     */
+    protected $_mongoFields;
+
+    /**
+     * Filtres de la requête 'find' MongoDb
+     * Nécessaire si $this->_mongoReqType est en mode 'custom'
+     * @var array
+     */
+    protected $_mongoFilters;
+
+    /**
+     * Options de la requête 'find' MongoDb
+     * Nécessaire si $this->_mongoReqType est en mode 'custom'
      * @var array
      */
     protected $_mongoOptions;
-
-    /**
-     * Requête d'initialisation
-     * @var array
-     */
-    protected $_req;
 
 
     /**
@@ -49,41 +70,73 @@ class noSql extends ajax
      */
     public function __construct(array $options = array())
     {
-        // Configuration du tableau
+        // Configuration du datatable
         $options['data-side-pagination'] ='server';
         parent::__construct($options);
 
-        // Connexion à une collection MongoDb
-        $this->connectCollection();
-    }
-
-
-    /**
-     * Création d'une instance MongoDb et connexion à une bdd.collection
-     */
-    private function connectCollection()
-    {
+        // Instance MongoDb
         try {
 			$mongoInstance = mongoDbSingleton::getInstance($this->_mongoConf);
             $this->_connectCollection = $mongoInstance->{$this->_mongoCollection};
 		} catch (\Exception $e) {
 			echo $e->getMessage;
 		}
+
+        // Construction de la requête et des lignes du tableau
+        $this->setData();
+    }
+
+
+    /**
+     * Type de configuration du Datatable MongoDb : 'simple' ou 'custom'
+     */
+    private function checkMongoReqType()
+    {
+        if (empty($this->_mongoReqType) || ($this->_mongoReqType != 'simple' && $this->_mongoReqType != 'custom')) {
+            echo '$this->_mongoReqType = ' . $this->_mongoReqType . '<br>';
+            echo '$this->_mongoReqType n\'est pas correctement difinit !<br>';
+        }
     }
 
 
     /**
      * Récupération de la liste des champs à partir de la requête d'initialisation
      */
-    protected function setChamps()
+    private function setChamps()
     {
-        foreach ($this->_req as $key => $val) {
-            foreach ($val as $k => $v) {
-                if ($k == '$project') {
-                    $this->_champs = array_keys($this->_req[$key]['$project']);
-                    break;
+        switch ($this->_mongoReqType)
+        {
+            case 'simple' :
+                if (is_array($this->_mongoFields) && count($this->_mongoFields) > 0) {
+                    $this->_champs = $this->_mongoFields;
                 }
-            }
+
+                break;
+
+            case 'custom' :
+
+                if (is_array($this->_mongoOptions) && is_array($this->_mongoOptions['projection']) && count($this->_mongoOptions['projection']) > 0) {
+
+                    $this->_champs = array();
+
+                    foreach ($this->_mongoOptions['projection'] as $name => $val) {
+                        if ($val == 1) {
+                            $this->_champs[] = $name;
+                        }
+                    }
+
+                } else {
+
+                    if (!is_array($this->_mongoOptions)) {
+                        echo '$this->_mongoOptions doit être un tableau !<br>';
+                    }
+
+                    if (!is_array($this->_mongoOptions['projection']) || count($this->_mongoOptions['projection']) == 0) {
+                        echo '$this->_mongoOptions[\'projection\'] doit être un tableau et doit contenir les champs à retourner<br>';
+                    }
+                }
+
+                break;
         }
 
         // echo '<pre>';
@@ -94,30 +147,108 @@ class noSql extends ajax
 
     /**
      * Préparation des données pour créer le flux Json
+     *
+     * @param   boolean     $csv        Certaines actions ne sont pas nécessaires pour l'exprot CSV
      */
-    protected function setData()
+    protected function setData($csv = false)
     {
-        // Récupération de la liste des champs demandés de la requête
+        // Vérification de la configuration du type de requête : 'simple' ou 'custom'
+        $this->checkMongoReqType();
+
+        // Liste des champs demandés de la requête
         $this->setChamps();
 
-        // Moteur de recherche multi-critères
-        // $this->setSearch();
+        // Initialisation des filtres de la requête
+        $this->initFilters();
 
-        // Comptage du nombre de lignes
-        $this->countResult();
+        // Initialisation des options de la requête
+        $this->initOptions();
 
-        // ORDER BY
-        // $parsed['ORDER'][0] = $this->setOrder();
+        if ($csv === false) {
+            // Comptage du nombre de lignes - A VIRER APRES AVOIR DECOMMENTE 'SEARCH'
+            $this->countResult();
 
-        // LIMIT
-        $this->offsetLimitResult();
+            // Gestion de l'ordre sur un champ ascendant ou descendant
+            $this->setOrder();
+
+            // Gestion de l'offset et du limit : résultats à afficher par page
+            $this->offsetLimitResult();
+        }
 
         // Mise en forme des résultats
-        $this->getResults();
+        $this->getRows();
 
-        echo '<pre>';
-        error_log(json_encode($this->_req));
-        echo '</pre>';
+        // echo '<pre>';
+        // print_r($this->_rows);
+        // echo '</pre>';
+    }
+
+
+    /**
+     * Initialisation des filtres de la requête
+     */
+    private function initFilters()
+    {
+        switch ($this->_mongoReqType)
+        {
+            case 'simple' :
+
+                // Configuration de la regex pour l'utilisation moteur de recherche multi-critères
+                if ($this->_search != '') {
+
+                    $regex  = '^.*' . $this->_search . '.*$';
+
+                    // Regex Mongo insensible à la casse
+                    $mongoRegex = array(
+                        '$regex' => $regex,
+                        '$options' => '-i'
+                    );
+
+                    $or = array();
+                    foreach ($this->_champs as $champ) {
+                        $or[] = array($champ => $mongoRegex);
+                    }
+
+                    $this->_mongoFilters = array('$or' => $or);
+                }
+
+                break;
+
+            case 'custom' :
+                break;
+        }
+
+        // echo '<pre>';
+        // print_r($this->_mongoFilters);
+        // echo '</pre>';
+    }
+
+
+    /**
+     * Initialisation des options de la requête
+     */
+    private function initOptions()
+    {
+        switch ($this->_mongoReqType)
+        {
+            case 'simple' :
+                $projection = array('_id' => 0);
+                foreach ($this->_champs as $champ) {
+                    $projection[$champ] = 1;
+                }
+
+                $this->_mongoOptions = array(
+                    'projection' => $projection
+                );
+                break;
+
+            case 'custom' :
+                break;
+        }
+
+        // echo '<pre>';
+        // print_r($this->_mongoOptions);
+        // echo '</pre>';
     }
 
 
@@ -126,49 +257,11 @@ class noSql extends ajax
      */
     private function countResult()
     {
-        // Bloc '$project' pour le comptage des résultats
-        $blocProject = array ('_id' => 0);
+        $this->_total = $this->_connectCollection->count($this->_mongoFilters);
 
-        // Bloc '$group' pour le comptage des résultats
-        $blocGroup = array (
-            "_id" => null,
-            "myCount" => array(
-                '$sum' => 1
-            )
-        );
-
-        $groupUpdate = false;
-
-        foreach ($this->_req as $key => $val) {
-
-            foreach ($val as $k => $v) {
-
-                // On surclasse le bloc '$project'
-                if ($k == '$project') {
-                    $reqCount[$key]['$project'] = $blocProject;
-
-                // On surclasse le bloc '$group'
-                } elseif ($k == '$group') {
-                    $reqCount[$key]['$group'] = $blocGroup;
-                    $groupUpdate = true;
-
-                // Ajout de tous les autres blocs
-                } else {
-                    $reqCount[$key][$k] = $v;
-                }
-            }
-        }
-
-        // Le bloc '$group' n'existait pas, on l'ajoute
-        if ($groupUpdate === false) {
-            $reqCount[]['$group'] = $blocGroup;
-        }
-
-        // Exécution de la requête | pipeline
-        $res = $this->_connectCollection->aggregate($reqCount, $this->_mongoOptions)->toArray();
-
-        // Nombre de résultats
-        $this->_total = $res[0]['myCount'];
+        // echo '<pre>';
+        // echo 'Count : ' . $this->_total;
+        // echo '</pre>';
     }
 
 
@@ -178,69 +271,24 @@ class noSql extends ajax
     private function setOrder()
     {
         if (empty($this->_sort)) {
-            $order = 'ASC';
+
+            $order = 1;
             $sort  = $this->_champs[0];
+
         } else {
-            $order = $this->_order;
+
+            switch($this->_order) {
+                case 'asc'  :   $order =  1;    break;
+                case 'desc' :   $order = -1;    break;
+                default     :   $order =  1;
+            }
+
             $sort  = $this->_sort;
         }
-        return array (
-                      'expr_type' => 'colref',
-                      'base_expr' => $sort,
-                      'no_quotes' => array  (
-                                            'delim' => false,
-                                            'parts' => array ($sort),
-                                            ),
-                      'sub_tree'  => false,
-                      'direction' => $order,
-                    );
-    }
 
-
-    /**
-     * Autocomplétion de la requête pour le moteur de recherche multi-champs
-     */
-    private function setSearch()
-    {
-        if (isset($this->_search) && $this->_search != '') {
-
-            // Like %search% sur tous les champs de la requête
-            $allLikes = array();
-            foreach ($this->_champs as $champ) {
-                $allLikes[$champ] =  '/' . $this->_search . '/';
-            }
-
-            // Ajout de la recherche multi-critères
-            $addMatch = array(
-                '$or' => array(
-                    $allLikes
-                )
-            );
-
-            // Boucle pour retrouver le bloc '$match' s'il existe
-            $matchUpdate = false;
-
-
-            foreach ($this->_req as $key => $val) {
-
-                foreach ($val as $k => $v) {
-
-                    // On complète le bloc '$match'
-                    if ($k == '$match') {
-                        $this->_req[$key]['$match'][] = $addMatch;
-                        $matchUpdate = true;
-                    }
-                }
-            }
-
-            // Le bloc '$match' n'existait pas, on l'ajoute
-            if ($matchUpdate === false) {
-                $this->_req[]['$match'][] = $addMatch;
-            }
-
-        }
-
-        error_log(json_encode($this->_req));
+        $this->_mongoOptions['sort'] = array(
+            $sort => $order
+        );
     }
 
 
@@ -250,66 +298,41 @@ class noSql extends ajax
     private function offsetLimitResult()
     {
         if (is_int($this->_offset) && is_int($this->_limit)) {
-
-            $skipUpdate  = false;
-            $limitUpdate = false;
-
-            foreach ($this->_req as $key => $val) {
-
-                foreach ($val as $k => $v) {
-
-                    // On surclasse le bloc '$project'
-                    if ($k == '$skip') {
-                        $this->_req[$key]['$skip'] = $this->_offset;
-                        $skipUpdate = true;
-
-                    // On surclasse le bloc '$group'
-                    } elseif ($k == '$limit') {
-                        $this->_req[$key]['$limit'] = $this->_limit;
-                        $limitUpdate = true;
-
-                    // Ajout de tous les autres blocs
-                    } else {
-                        $this->_req[$key][$k] = $v;
-                    }
-                }
-            }
-
-            // Le bloc '$skip' n'existait pas, on l'ajoute
-            if ($skipUpdate === false) {
-                $this->_req[]['$skip'] = $this->_offset;
-            }
-
-            // Le bloc '$limit' n'existait pas, on l'ajoute
-            if ($limitUpdate === false) {
-                $this->_req[]['$limit'] = $this->_limit;
-            }
+            $this->_mongoOptions['skip']  = $this->_offset;
+            $this->_mongoOptions['limit'] = $this->_limit;
         }
 
         // echo '<pre>';
-        // print_r($this->_req);
+        // print_r($this->_mongoOptions);
         // echo '</pre>';
     }
 
 
     /**
-     * Execution & formatage des résultats de la requête
+     * Retourne un nombre de lignes limité par l'offset et le limit
      */
-    private function getResults()
+    private function getRows()
     {
-        // Exécution de la requête
-        $res = $this->_connectCollection->aggregate(
-            $this->_req,
+        $res = $this->_connectCollection->find(
+            $this->_mongoFilters,
             $this->_mongoOptions
         );
 
         // Formatage des résultats
         $i=0;
+        $this->_rows = array();
         foreach ($res as $k => $v) {
             foreach ($v as $k2 => $v2) {
-                $this->_rows[$i][$k2] = $v2;
-            }
 
+                $val = $v2;
+
+                // Formatage automatique des champs Timestamp en DateTime
+                if (is_object($v2) && get_class($v2) == 'MongoDB\BSON\UTCDateTime') {
+                    $val = $v2->toDateTime()->format('Y-m-d H:i:s');
+                }
+
+                $this->_rows[$i][$k2] = $val;
+            }
             $i++;
         }
 
@@ -334,60 +357,57 @@ class noSql extends ajax
 
         // Libellés
         $ligne = array();
+
         foreach ($this->_fields as $field) {
 
             if (isset($field['label'])) {
-                if (empty($field['csv'])) {
-                    $ligne[] = '"' . $field['label'] . '"';
-                } else {
-                    if ($field['csv'] == 'true') {
-                        $ligne[] = '"' . $field['label'] . '"';
+
+                $label = '"' . $field['label'] . '"';
+
+                if (isset($field['csv'])) {
+                    if ($field['csv'] == 'true' || $field['csv'] === true) {
+                        $ligne[] = $label;
                     }
+                } else {
+                    $ligne[] = $label;
                 }
-            } else {
-                $ligne[] = '';
             }
         }
+
         $csv .= implode('; ', $ligne) . chr(10);
 
-        $data = array();
-
-        $sql = $this->_dbh->query($this->_req);
-        $res = $sql->fetchAll();
-
-        // Création du flux json
-        $data['rows'] = array();
+        // Récupération des données
+        $this->setData(true);
 
         // Fonction anonyme - Modification des données post requête
         $csvModifier = $this->_csvModifier;
 
-        foreach ($res as $k=>$v) {
+        foreach ($this->_rows as $k=>$v) {
 
-            $data['rows'][$k] = array();
+            $this->_rows[$k] = array();
 
             foreach ($this->_champs as $champ) {
-                if (is_object($v))  { $data['rows'][$k][$champ] = $v->$champ; }
-                if (is_array($v))   { $data['rows'][$k][$champ] = $v[$champ]; }
+                if (is_object($v))  { $this->_rows[$k][$champ] = $v->$champ; }
+                if (is_array($v))   { $this->_rows[$k][$champ] = $v[$champ]; }
             }
 
             // csvModifier
             if (! empty($csvModifier)) {
-                $data['rows'][$k] = $csvModifier($data['rows'][$k]);
+                $this->_rows[$k] = $csvModifier($this->_rows[$k]);
             }
         }
 
-
-        foreach ($data['rows'] as $k=>$v) {
+        foreach ($this->_rows as $k=>$v) {
 
             $ligne = array();
             foreach ($this->_fields as $field) {
 
-                if (empty($field['csv'])) {
-                    $ligne[] = '"' . str_replace('"', '\"', $v[$field['name']]) . '"';
-                } else {
-                    if ($field['csv'] == 'true') {
+                if (isset($field['csv'])) {
+                    if ($field['csv'] == 'true' || $field['csv'] === true) {
                         $ligne[] = '"' . str_replace('"', '\"', $v[$field['name']]) . '"';
                     }
+                } else {
+                    $ligne[] = '"' . str_replace('"', '\"', $v[$field['name']]) . '"';
                 }
             }
             $csv .= implode('; ', $ligne) . chr(10);
