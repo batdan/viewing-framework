@@ -260,7 +260,7 @@ class sql extends ajax
         foreach ($this->_fields as $field) {
 
             if (isset($field['label'])) {
-                if (empty($field['csv'])) {
+                if (empty($field['csv']) && $field['csv'] != 'false' && $field['csv'] !== false) {
                     $ligne[] = '"' . $field['label'] . '"';
                 } else {
                     if ($field['csv'] == 'true') {
@@ -305,7 +305,7 @@ class sql extends ajax
             $ligne = array();
             foreach ($this->_fields as $field) {
 
-                if (empty($field['csv'])) {
+                if (empty($field['csv']) && $field['csv'] != 'false' && $field['csv'] !== false) {
                     $ligne[] = '"' . str_replace('"', '\"', $v[$field['name']]) . '"';
                 } else {
                     if ($field['csv'] == 'true') {

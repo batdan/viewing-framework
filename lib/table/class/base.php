@@ -125,7 +125,12 @@ class base
 
                     'mongoConf'                     => 'default',
                     'mongoCollection'               => '',
-                    'mongoOptions'		            => array('allowDiskUse' => true),
+                    'mongoReqType'                  => 'simple',
+
+                    'mongoFields'                   => array(),
+
+                    'mongoFilters'		            => array(),
+                    'mongoOptions'		            => array(),
 
                     'req'                           => '',
                     'dataSet'                       => '',
@@ -174,6 +179,11 @@ class base
 
         $this->_mongoConf               = $options['mongoConf'];
         $this->_mongoCollection         = $options['mongoCollection'];
+        $this->_mongoReqType            = $options['mongoReqType'];
+
+        $this->_mongoFields             = $options['mongoFields'];
+
+        $this->_mongoFilters            = $options['mongoFilters'];
         $this->_mongoOptions            = $options['mongoOptions'];
 
         $this->_req                     = $options['req'];
