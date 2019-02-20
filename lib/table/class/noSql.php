@@ -82,6 +82,15 @@ class noSql extends ajax
 			echo $e->getMessage;
 		}
 
+        // $this->checkMongoReqType();
+        // $this->setChamps();
+        // $this->initFilters();
+        // $this->initOptions();
+        // $this->countResult();
+        // $this->setOrder();
+        // $this->offsetLimitResult();
+        // $this->getRows();
+
         // Construction de la requête et des lignes du tableau
         $this->setData();
     }
@@ -189,37 +198,68 @@ class noSql extends ajax
      */
     private function initFilters()
     {
+        $this->_search = 'emp';
+
+        // Configuration de la regex pour l'utilisation moteur de recherche multi-critères
+        if ($this->_search != '') {
+
+            $regex  = '^.*' . $this->_search . '.*$';
+
+            $mongoRegex = array(
+                '$regex'    => $regex,
+                '$options'  => '-i'         // Regex Mongo insensible à la casse
+            );
+
+            $or = array();
+            foreach ($this->_champs as $champ) {
+                $or[] = array($champ => $mongoRegex);
+            }
+
+            $searchFilter = array('$or' => $or);
+        }
+
+        // Configuration de '_mongoFilters' en fonction de '_mongoReqType'
         switch ($this->_mongoReqType)
         {
             case 'simple' :
 
-                // Configuration de la regex pour l'utilisation moteur de recherche multi-critères
-                if ($this->_search != '') {
-
-                    $regex  = '^.*' . $this->_search . '.*$';
-
-                    // Regex Mongo insensible à la casse
-                    $mongoRegex = array(
-                        '$regex' => $regex,
-                        '$options' => '-i'
-                    );
-
-                    $or = array();
-                    foreach ($this->_champs as $champ) {
-                        $or[] = array($champ => $mongoRegex);
-                    }
-
-                    $this->_mongoFilters = array('$or' => $or);
+                if (isset($searchFilter)) {
+                    $this->_mongoFilters = $searchFilter;
                 }
 
                 break;
 
             case 'custom' :
+
+                if (isset($this->_mongoFilters['$and'])) {
+
+                    if (isset($searchFilter)) {;
+                        $this->_mongoFilters['$and'][] = $searchFilter;
+                    }
+
+                } else {
+
+                    $mongoFilters = $this->_mongoFilters;
+
+                    unset($this->_mongoFilters);
+                    $this->_mongoFilters = array();
+                    $this->_mongoFilters['$and'] = array();
+
+                    if (isset($searchFilter)) {
+                        $this->_mongoFilters['$and'][0] = $searchFilter;
+                    }
+
+                    foreach($mongoFilters as $key => $val) {
+                        $this->_mongoFilters['$and'][0][$key] = $val;
+                    }
+
+                }
+
                 break;
         }
 
         // echo '<pre>';
-        // print_r($this->_mongoFilters);
+        // var_export($this->_mongoFilters);
         // echo '</pre>';
     }
 
@@ -229,21 +269,16 @@ class noSql extends ajax
      */
     private function initOptions()
     {
-        switch ($this->_mongoReqType)
-        {
-            case 'simple' :
-                $projection = array('_id' => 0);
-                foreach ($this->_champs as $champ) {
-                    $projection[$champ] = 1;
-                }
+        if ($this->_mongoReqType == 'simple') {
 
-                $this->_mongoOptions = array(
-                    'projection' => $projection
-                );
-                break;
+            $projection = array('_id' => 0);
+            foreach ($this->_champs as $champ) {
+                $projection[$champ] = 1;
+            }
 
-            case 'custom' :
-                break;
+            $this->_mongoOptions = array(
+                'projection' => $projection
+            );
         }
 
         // echo '<pre>';
