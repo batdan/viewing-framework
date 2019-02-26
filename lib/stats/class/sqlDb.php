@@ -836,16 +836,16 @@ eof;
 
 					$addHiddenInput
 
-					<div class="col-lg-12" style="padding:0; margin:0; margin-bottom:7px; color:#777;">
+					<div class="col-sm-12" style="padding:0; margin:0; margin-bottom:7px; color:#777;">
 						{$this->affLinkNormal()}
 						<div style="display:inline-block; padding:0 5px;">|</div>
 						{$this->affLinkCompar()}
 						{$this->htmlEndLink}
 					</div>
 
-					<div class="col-lg-12" style="padding:0;">
-					    <div class="col-lg-2" style="padding:0;">
-					        <div class="form-group" style="margin-bottom:5px;">
+					<div class="col-sm-12" style="padding:0;">
+					    <div class="col-sm-2" style="padding:0;">
+					        <div class="form-group" style="padding:0; margin:0 2px 5px 2px;">
 					            <div class="input-group date" id="dtp_deb" role="datetimepicker">
 					                <input type="text" name="dtp_deb" id="dtp_deb_id" class="form-control" style="height:34px;" value="{$this->dtpDeb}" placeholder="Début $placeholder" required>
 					                <span class="input-group-addon">
@@ -854,8 +854,8 @@ eof;
 					            </div>
 					        </div>
 					    </div>
-					    <div class="col-lg-2" style="padding:0; margin-left:5px;">
-					        <div class="form-group" style="margin-bottom:5px;">
+					    <div class="col-sm-2" style="padding:0;">
+					        <div class="form-group" style="padding:0; margin:0 2px 5px 2px;">
 					            <div class="input-group date" id="dtp_fin">
 					                <input type="text" name="dtp_fin" id="dtp_fin_id" class="form-control" style="height:34px;" value="{$this->dtpFin}" placeholder="Fin $placeholder" required>
 					                <span class="input-group-addon">
@@ -864,13 +864,13 @@ eof;
 					            </div>
 					        </div>
 					    </div>
-						<div class="col-lg-2" style="padding:0; margin-left:5px;">
+						<div class="col-sm-2" style="padding:0; margin:0 2px 5px 2px;">
 							<select name="stepTimeline" id="stepTimeline" class="form-control" required>
 								<option value="">-- Intervals --</option>
 								$options
 							</select>
 						</div>
-						<div class="col-lg-5" style="padding:0; margin-left:5px;">
+						<div class="col-sm-2" style="padding:0; margin:0 2px 5px 2px;">
 							<button type="submit" class="btn btn-primary" data-tooltip="true">Envoyer</button>
 						</div>
 					</div>
@@ -898,9 +898,9 @@ eof;
 			// Code HTML de Comparaison
 			$this->htmlCompar = <<<eof
 				<input type="hidden" name="compar" value="1">
-				<div id="datePickerCompar_id" class="col-lg-12" style="padding:0;">
-					<div class="col-lg-2" style="padding:0;">
-						<div class="form-group">
+				<div id="datePickerCompar_id" class="col-sm-12" style="padding:0;">
+					<div class="col-sm-2" style="padding:0;">
+						<div class="form-group" style="padding:0; margin:0 2px 5px 2px;">
 							<div class="input-group date" id="dtp_deb_compar">
 								<input type="text" name="dtp_deb_compar" id="dtp_deb_id_compar" class="form-control" style="height:34px;" value="{$this->dtpDebCompar}" placeholder="Début $placeholder" required>
 								<span class="input-group-addon">
@@ -909,8 +909,8 @@ eof;
 							</div>
 						</div>
 					</div>
-					<div class="col-lg-2" style="padding:0; margin-left:5px;">
-						<div class="form-group">
+					<div class="col-sm-2" style="padding:0;">
+						<div class="form-group" style="padding:0; margin:0 2px 5px 2px;">
 							<div class="input-group date" id="dtp_fin_compar">
 								<input type="text" name="dtp_fin_compar" id="dtp_fin_id_compar" class="form-control" style="height:34px;" value="{$this->dtpFinCompar}" placeholder="Fin $placeholder" required>
 								<span class="input-group-addon">
@@ -919,7 +919,7 @@ eof;
 							</div>
 						</div>
 					</div>
-			</div>
+				</div>
 eof;
 
 			$js = <<<eof
