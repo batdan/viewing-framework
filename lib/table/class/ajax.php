@@ -15,6 +15,7 @@ class ajax extends base
      */
     protected $_total;      // Nombre de résultat dans le cas d'une requête SQL
     protected $_rows;       // Données pour la création du flux Json
+    private   $_options;
 
 
     /**
@@ -23,6 +24,8 @@ class ajax extends base
     public function __construct(array $options = array())
     {
         parent::__construct($options);
+
+        $this->_options = $options;
     }
 
 
@@ -31,15 +34,15 @@ class ajax extends base
      */
     protected function getJson()
     {
+        header('Content-Type: application/json');
+
         // Récupération des lignes
         $this->setData();
-
-        header('Content-Type: application/json');
 
         $data = array();
 
         // Récupération du nombre total de résultats
-        if (! empty ($this->_total)) {
+        if (isset($this->_total)) {
             $data['total'] = $this->_total;
         }
 
@@ -65,8 +68,8 @@ class ajax extends base
             }
         }
 
-
-        if (empty ($this->_total)) {
+        // Le total n'est pas renvoyé pour les datatables de type 'data'
+        if ($this->_options['data-side-pagination'] == 'client') {
             $data = $data['rows'];
         }
 

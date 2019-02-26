@@ -28,7 +28,7 @@ class sql extends ajax
      */
     public function __construct(array $options = array())
     {
-        $options['data-side-pagination'] ='server';
+        $options['data-side-pagination'] = 'server';
         parent::__construct($options);
 
         // Instance PDO

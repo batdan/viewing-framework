@@ -71,7 +71,7 @@ class noSql extends ajax
     public function __construct(array $options = array())
     {
         // Configuration du datatable
-        $options['data-side-pagination'] ='server';
+        $options['data-side-pagination'] = 'server';
         parent::__construct($options);
 
         // Instance MongoDb
@@ -81,18 +81,6 @@ class noSql extends ajax
 		} catch (\Exception $e) {
 			echo $e->getMessage;
 		}
-
-        // $this->checkMongoReqType();
-        // $this->setChamps();
-        // $this->initFilters();
-        // $this->initOptions();
-        // $this->countResult();
-        // $this->setOrder();
-        // $this->offsetLimitResult();
-        // $this->getRows();
-
-        // Construction de la requête et des lignes du tableau
-        $this->setData();
     }
 
 
@@ -198,7 +186,7 @@ class noSql extends ajax
      */
     private function initFilters()
     {
-        $this->_search = 'emp';
+        // $this->_search = 'emp';
 
         // Configuration de la regex pour l'utilisation moteur de recherche multi-critères
         if ($this->_search != '') {
@@ -378,7 +366,7 @@ class noSql extends ajax
 
 
     /**
-     * Crétion d'un csv avec le tableau complet
+     * Création d'un csv avec le tableau complet
      */
     protected function getCsv()
     {

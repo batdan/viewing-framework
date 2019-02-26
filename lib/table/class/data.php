@@ -25,7 +25,7 @@ class data extends ajax
      */
     public function __construct(array $options = array())
     {
-        $options['data-side-pagination'] ='client';
+        $options['data-side-pagination'] = 'client';
 
         parent::__construct($options);
     }
