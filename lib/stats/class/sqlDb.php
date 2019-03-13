@@ -717,44 +717,7 @@ class sqlDb extends base
 		// 	print_r($this->data);			// Tableau de données formatés
 		// echo '</pre>';
 	}
-
-
-	/**
-	 * Permet de modifier une couleur hexadécimale pour récupérer une variante proche
-	 */
-	protected function pantoneColor($colorHexa) {
-
-		$colorHexaR = substr($colorHexa,1,2);
-		$colorHexaV = substr($colorHexa,3,2);
-		$colorHexaB = substr($colorHexa,5,2);
-
-		$colorsDec = array(
-			'R'=>hexdec($colorHexaR),
-			'V'=>hexdec($colorHexaV),
-			'B'=>hexdec($colorHexaB),
-		 );
-
-		foreach ($colorsDec as $k => $v) {
-			if ($v > 50) {
-				$colorsDec[$k] -= 40;
-			} elseif ($v > 40 && $v <= 50) {
-				$colorsDec[$k] -= 30;
-			} elseif ($v > 30 && $v <= 40) {
-				$colorsDec[$k] -= 20;
-			} elseif ($v > 20 && $v <= 30) {
-				$colorsDec[$k] -= 10;
-			} elseif ($v > 10 && $v <= 20) {
-				$colorsDec[$k] -= 5;
-			}
-		}
-
-		$colorHexR = str_pad(dechex($colorsDec['R']), 2, '0', STR_PAD_LEFT);
-		$colorHexV = str_pad(dechex($colorsDec['V']), 2, '0', STR_PAD_LEFT);
-		$colorHexB = str_pad(dechex($colorsDec['B']), 2, '0', STR_PAD_LEFT);
-
-		return '#' . $colorHexR . $colorHexV . $colorHexB;
-	}
-
+	
 
 	/**
 	 * Moteur de recherche du gestionaire de statistiques
