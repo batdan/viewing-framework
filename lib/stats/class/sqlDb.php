@@ -662,7 +662,7 @@ class sqlDb extends base
 				if (isset($v['graph'])  &&  $v['graph'] === true) {
 					$this->data[$line]['graph'] 		= $v['graph'];
 					$this->data[$line]['graphOnLoad'] 	= false;
-					$this->data[$line]['graphColor'] 	= $this->pantoneColor($v['graphColor']);
+					$this->data[$line]['graphColor'] 	= self::pantoneColor($v['graphColor']);
 				}
 
 				if (isset($v['group'])  &&  $v['group'] === true) {
@@ -717,7 +717,7 @@ class sqlDb extends base
 		// 	print_r($this->data);			// Tableau de données formatés
 		// echo '</pre>';
 	}
-	
+
 
 	/**
 	 * Moteur de recherche du gestionaire de statistiques

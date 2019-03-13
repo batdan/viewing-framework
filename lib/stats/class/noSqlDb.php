@@ -800,7 +800,7 @@ class noSqlDb extends base
 
 			if ($compar) {
 				$graphOnLoad = false;
-				$color = $this->pantoneColor($color);
+				$color = self::pantoneColor($color);
 			}
 
 			$this->data[$line]['graphOnLoad'] 	= $graphOnLoad;

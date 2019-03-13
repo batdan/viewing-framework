@@ -1608,7 +1608,7 @@ eof;
 	/**
 	 * Permet de modifier une couleur hexadécimale pour récupérer une variante proche
 	 */
-	protected function pantoneColor($colorHexa) {
+	protected static function pantoneColor($colorHexa) {
 
 		$colorHexaR = substr($colorHexa,1,2);
 		$colorHexaV = substr($colorHexa,3,2);
