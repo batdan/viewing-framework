@@ -190,10 +190,15 @@ class base
 			'libelle' 			=> array(),
 			'rowStyle' 			=> null,
 			'width' 			=> '1000px',
+
 			'title' 			=> '',
 			'description'		=> '',
 			'results_line' 		=> array(),
+
 			'colorMinMax' 		=> false,
+			'colorMin'			=> '#db0f00',	// rouge
+			'colorMax'			=> '#07a007',	// vert
+
 			'ligneTotaux'		=> false,
 			'ligneTotauxConf'	=> array(
 										'libelle'	=> 'TOTAL',
@@ -250,14 +255,21 @@ class base
 		$this->libelle 			= $options['libelle'];
 		$this->rowStyle 		= $options['rowStyle'];
 		$this->width 			= $options['width'];
+
 		$this->title 			= $options['title'];
 		$this->description		= $options['description'];
 		$this->results_line 	= $options['results_line'];
+
 		$this->colorMinMax		= $options['colorMinMax'];
+		$this->colorMin			= $options['colorMin'];
+		$this->colorMax			= $options['colorMax'];
+
 		$this->ligneTotaux		= $options['ligneTotaux'];
 		$this->ligneTotauxConf	= $options['ligneTotauxConf'];
+
 		$this->graph			= $options['graph'];
 		$this->graphConf		= $options['graphConf'];
+
 		$this->groupLabel		= $options['groupLabel'];
 		$this->group			= $options['group'];
 		$this->groupColor		= $options['groupColor'];
@@ -914,21 +926,20 @@ eof;
 				}
 
 				$attrs	= array();
+				$style 	= array();
 
 				if ($this->colorMinMax && $v_chp!=0) {
 					if ($v_chp == $valMin) {
-						$attrs['class'] = 'valMin';
+						$style[] = 'font-weight:bold; color:'.$this->colorMin.';';
 					}
 					if ($v_chp == $valMax) {
-						$attrs['class'] = 'valMax';
+						$style[] = 'font-weight:bold; color:'.$this->colorMax.';';
 					}
 				}
 
 				//////////////////////////////////////////////////////////////////////////////////////////
 				// Affichage de la ligne
 				if (is_array($this->libelle[$k_chp])) {
-
-					$style 	= array();
 
 					$value  = $v_chp;
 					$unite	= '';

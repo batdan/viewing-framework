@@ -9,18 +9,8 @@
     padding: 4px;
 }
 
-.stats	.intitule {
+.stats .intitule {
 	font-weight: bold;
-}
-
-.stats	.valMin {
-	font-weight: bold;
-	color: blue;
-}
-
-.stats	.valMax {
-	font-weight: bold;
-	color: red;
 }
 
 .stats	.desc_H1 {
