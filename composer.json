@@ -19,5 +19,8 @@
         "danack/syntaxhighlighter": "@stable",
 		"jenner/simple_fork": "@stable",
 		"mrclay/minify": "@stable"
-	}
+	},
+	"license": [
+       "GPL-3.0-or-later"
+    ]
 }
