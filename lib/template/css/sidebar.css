@@ -73,6 +73,10 @@
 .sidebar .li0_activ {
     padding: 10px 15px;
     list-style-type: none;
+    /* background-color: #afc8c8; */
+}
+
+.sidebar .on {
     background-color: #afc8c8;
 }
 

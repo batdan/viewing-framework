@@ -154,6 +154,7 @@ eof;
                     // Page en cours
                     if (!empty($menu['path']) && (strstr($_SERVER['REQUEST_URI'], $menu['path']) || $key == $this->_idMenu)) {
                         $a->setAttribute('class', 'link activ');
+                        $li->setAttribute('class', 'li0_activ on');
                     }
 
                     $fleche = $this->_dom->createElement('div');
@@ -305,6 +306,7 @@ eof;
 
                     if (empty($menu['path']) || (!empty($menu['path']) && !strstr($_SERVER['REQUEST_URI'], $menu['path']))) {
                         $js[] = "$('#sidebarFleche_" . $menu['id'] . "').attr('class', 'fleche fa fa-angle-down');";
+                        $js[] = "$('#sidebarFleche_" . $menu['id'] . "').parent().attr('class', 'li0_activ on');";
                     }
 
                     $js[] = "$('#li_" . $menu['id'] . "').removeAttr('style');";
