@@ -84,10 +84,28 @@ if ($_POST['actionForm'] == 'save'  ||  $_POST['actionForm'] == 'saveExit') {
     // Nouvelle entrée
     if (empty($_POST['clePrimaireId'])) {
 
+        // Possibilité d'utiliser une table sans champ de type : date_crea
+        $insertChpDateCreate = '';
+        $insertValDateCreate = '';
+
+        if (!empty($_POST['dateCreaNameBDD'])) {
+            $insertChpDateCreate = ", " . $_POST['dateCreaNameBDD'];
+            $insertValDateCreate = ", NOW()";
+        }
+
+        // Possibilité d'utiliser une table sans champ de type : date_modif
+        $insertChpDateModif = '';
+        $insertValDateModif = '';
+
+        if (!empty($_POST['dateModifNameBDD'])) {
+            $insertChpDateModif = ", " . $_POST['dateModifNameBDD'];
+            $insertValDateModif = ", NOW()";
+        }
+
         $req  = "INSERT INTO " . $_POST['tableBDD'];
-        $req .= " (" . implode(', ', array_keys($chps)) . ", " . $_POST['dateCreaNameBDD'] . ", " . $_POST['dateModifNameBDD'] . ")";
+        $req .= " (" . implode(', ', array_keys($chps)) . $insertChpDateCreate . $insertChpDateModif . ")";
         $req .= " VALUES";
-        $req .= " (:" . implode(', :', array_keys($chps)) . ", NOW(), NOW())";
+        $req .= " (:" . implode(', :', array_keys($chps)) . $insertValDateCreate . $insertValDateModif . ")";
 
         $sql = $dbh->prepare($req);
 
@@ -130,7 +148,12 @@ if ($_POST['actionForm'] == 'save'  ||  $_POST['actionForm'] == 'saveExit') {
         }
 
         $req  = "UPDATE " . $_POST['tableBDD'] . " SET" . chr(10);
-        $req .= $_POST['dateModifNameBDD'] . " = NOW()," . chr(10);
+
+        // Possibilité d'utiliser une table sans champ de type : date_modif
+        if (!empty($_POST['dateModifNameBDD'])) {
+            $req .= $_POST['dateModifNameBDD'] . " = NOW()," . chr(10);
+        }
+
         $req .= implode(',' . chr(10), $chpUpdate) . chr(10);
         $req .= "WHERE " . $_POST['clePrimaireName'] . " = :id";
 
