@@ -3,8 +3,13 @@ require_once __DIR__ . '/../../../../../../bootstrap.php';
 
 header('Content-Type: text/html; charset=UTF-8');
 
+use core\dbSingleton;
 
-$dbh = core\dbSingleton::getInstance($_POST['bddName']);
+if (!empty($_POST['bddName'])) {
+    $dbh = dbSingleton::getInstance($_POST['bddName']);
+} else {
+    $dbh = dbSingleton::getInstance();
+}
 
 // On bloque le script si un bot venait à appeler le fichier ajax ------------------------------
 if (count($_POST)==0)	die();
