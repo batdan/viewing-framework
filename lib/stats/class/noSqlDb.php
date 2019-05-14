@@ -27,7 +27,7 @@ class noSqlDb extends base
      *								[graphOnLoad] 	=> Affichage de cette donnée dans le graph au chargement ( true | false )
      *								[graphColor] 	=> #E10F1A			// Couleur graphique + pastille intitulé ligne
      *								[values] 		=> Array(
-	 *									[T1] => 24						// Valeurs > interval de temps
+	 *									[T1] => 24						// Valeurs > intervalle de temps
      *									[T2] => 44
      *									...
      *		)
@@ -59,7 +59,7 @@ class noSqlDb extends base
 
 	protected $req;				// Requête MongoDb
 
-	protected $addGroup;		// Permet de rajouter des filtres en plus des intervals de temps dans "$group"
+	protected $addGroup;		// Permet de rajouter des filtres en plus des intervalles de temps dans "$group"
 
 	protected $reqCompar;		// Requête (comparaison)
 	protected $hydrateReq;		// Tableau facultatif : Permet de passer des valeurs supplémentaires à la close WHERE d'un requête
@@ -81,13 +81,13 @@ class noSqlDb extends base
 	protected $chpDate;			// Champ servant à filtrer sur la date
 	protected $chpDateType;		// Type de champ date : date | time | datetime
 
-	protected $stepTimeline;	// Choix de la durée d'un interval : annee | mois | semaine | jour | ...
-	protected $stepActiv;		// Tableau facultatif : Activation ou non des types d'interval présents dans le moteur de recherche
+	protected $stepTimeline;	// Choix de la durée d'un intervalle : annee | mois | semaine | jour | ...
+	protected $stepActiv;		// Tableau facultatif : Activation ou non des types d'intervalle présents dans le moteur de recherche
 								// Par défaut, ils sont tous présents
 
 	protected $dtpDeb;			// Champ de recherche : début plage
 	protected $dtpFin;			// Champ de recherche : fin plage
-	protected $selectStep;		// Champ de recherche : Select interval
+	protected $selectStep;		// Champ de recherche : Select intervalle
 
 	protected $compar = false;	// Boolean : mode normal ou comparaison
 	protected $dtpDebCompar;	// Champ de recherche : début plage (comparaison)
@@ -102,17 +102,17 @@ class noSqlDb extends base
 
 
 	protected $days = array(
-		'Lundi',
-		'Mardi',
-		'Mercredi',
-		'Jeudi',
-		'Vendredi',
-		'samedi',
-		'Dimanche',
+		1 => 'Lundi',
+		2 => 'Mardi',
+		3 => 'Mercredi',
+		4 => 'Jeudi',
+		5 => 'Vendredi',
+		6 => 'samedi',
+		7 => 'Dimanche',
 	);
 
 	/**
-	 * Tableau contenant tous les intervals pour renvoyer un 0 dans les cases vides
+	 * Tableau contenant tous les intervalles pour renvoyer un 0 dans les cases vides
 	 * @var array
 	 */
 	protected $intervals = array();
@@ -172,7 +172,7 @@ class noSqlDb extends base
 											'WEEK'		=> 'Semaines',
 											// 'WEEK_S'	=> 'Semaines (1er jour samedi)',
 											'DAY'		=> 'Jours',
-											'int_JOUR'	=> 'Interval jours de la semaine',
+											'int_JOUR'	=> 'Intervalle jours de la semaine',
 											'HOUR'		=> 'Heures de la journée',
 				),
 
@@ -250,13 +250,13 @@ class noSqlDb extends base
 	}
 
 	/**
-	 * Formatage de la requête le type d'interval retenu
+	 * Formatage de la requête le type d'intervalle retenu
 	 */
 	private function dateFormatType()
 	{
 		if (! empty($this->stepTimeline)) {
 
-			// Configuration des intervals
+			// Configuration des intervalles
 			$intervals = array(
 				'YEAR' 		=> array(
 									"year" 			=> array('$year'		=> '$'  . $this->chpDate),
@@ -275,10 +275,24 @@ class noSqlDb extends base
 									"dayOfMonth" 	=> array('$dayOfMonth' 	=> '$'  . $this->chpDate),
 				),
 				'int_JOUR'	=> array(
-									"dayOfWeek" 	=> array('$dayOfWeek'	=> '$'  . $this->chpDate),
+									// "dayOfWeek" 	=> array('$dayOfWeek'	=> '$'  . $this->chpDate),
+
+									"dayOfWeek" 				=> array(
+										'$dateToString'	 	=> array(
+											'date'	 	=> '$' . $this->chpDate,
+											'format'	=> '%u',
+										),
+									),
 				),
 				'HOUR'		=> array(
-									"hour" 			=> array('$hour'	 	=> '$'  . $this->chpDate),
+									"hour" 			=> array(
+										'$dateToString'	 	=> array(
+											'date'	 	=> '$' . $this->chpDate,
+											'format'	=> '%H',
+											//'timezone'=> The timezone of the operation result.,
+											//'onNull'	=> The value to return if the date is null or missing,
+										),
+									),
 				),
 			);
 
@@ -291,7 +305,7 @@ class noSqlDb extends base
 				);
 			}
 
-			// Groupe Interval
+			// Groupe Intervalle
 			$group = array(
 				"_id" => $interval
 			);
@@ -513,7 +527,7 @@ class noSqlDb extends base
 				)
 			);
 
-			// Remplacement du filtre par plage ou interval
+			// Remplacement du filtre par plage ou intervalle
 			$req[2]['$group'] = array_merge(
 				$this->dateFormatType(),
 				$req[2]['$group']
@@ -535,12 +549,11 @@ class noSqlDb extends base
 			// Récupération des résultats
 			foreach ($res as $doc) {
 
-				// Récupération du nom de l'interval dans la timeLine (nom de la colonne)
+				// Récupération du nom de l'intervalle dans la timeLine (nom de la colonne)
 				$stepLib = $this->stepLibelle($doc);
-
 				// Attention de toujours grouper sur une clé se nommant "resultat" dans le tableau de confiuration
 
-				// Goupé seulement sur l'interval de temps
+				// Groupé seulement sur l'intervalle de temps
 				if (empty($this->addGroup)) {
 					$result[$itRes][$stepLib] = $doc->resultat;
 
@@ -575,12 +588,12 @@ class noSqlDb extends base
 				// Récupération des résultats
 				foreach ($res as $doc) {
 
-					// Récupération du nom de l'interval dans la timeLine (nom de la colonne)
+					// Récupération du nom de l'intervalle dans la timeLine (nom de la colonne)
 					$stepLib = $this->stepLibelle($doc);
 
 					// Attention de toujours grouper sur une clé se nommant "resultat" dans le tableau de confiuration
 
-					// Goupé seulement sur l'interval de temps
+					// Goupé seulement sur l'intervalle de temps
 					if (empty($this->addGroup)) {
 						$resultCompar[$itRes][$stepLib] = $doc->resultat;
 
@@ -632,21 +645,18 @@ class noSqlDb extends base
 			// Pas de groupe supplémentaire
 			if (empty($this->addGroup)) {
 
-				foreach ($result[$itRes] as $k2=>$v2) {
+				foreach ($result[$itRes] as $k2 => $v2) {
 
 					// Ajout de la configuration de la ligne
 					$this->addLibelle($nChp, $line);
 
-
 					if (!empty($v2)) {
-
 						if (!in_array($k2, $this->intervals)) {
 							$this->intervals[] = $k2;
 						}
-
 						$this->data[$line]['values'][$k2] = $v2;
 					} else {
-						$this->data[$line]['values'][$v2] = 0;
+						$this->data[$line]['values'][$k2] = 0;
 					}
 
 					$line++;
@@ -699,14 +709,13 @@ class noSqlDb extends base
 							$this->addLibelle($nChp, $line);
 
 							if (!empty($v2)) {
-
 								if (!in_array($k2, $this->intervals)) {
 									$this->intervals[] = $k2;
 								}
-
+								// echo $addGroup . ' - ' . $k2 . ' - ' . $v2 . '<br>';
 								$this->data[$line]['values'][$k2] = $v2;
 							} else {
-								$this->data[$line]['values'][$v2] = 0;
+								$this->data[$line]['values'][$k2] = 0;
 							}
 						}
 
@@ -751,18 +760,24 @@ class noSqlDb extends base
 			$itRes++;
 		}
 
-		// Remplissage des intervals vides
+		// Remplissage des intervalles vides
 		$this->checkIntervals();
 
 		// echo '<pre>';
-		// 	// print_r($res);				// Résultats de la requête
-		// 	// print_r($this->champs);		// Liste des champs
-		// 	// print_r($this->libelle);		// Liste des colonnes
-		// 	// print_r($resultCompar);
-		// 	// print_r($result);
-		// 	print_r($this->intervals);
-		// 	print_r($this->data);			// Tableau de données formatés
+			// print_r($req);				// Requête
+			// echo '<hr>';
+			// print_r($res);				// Résultats de la requête
+			// print_r($this->champs);		// Liste des champs
+			// print_r($this->libelle);		// Liste des colonnes
+			// print_r($resultCompar);
+			// echo '<hr>';
+			// print_r($result);
+			// echo '<hr>';
+			// print_r($this->intervals);
+			// echo '<hr>';
+			// print_r($this->data);		// Tableau de données formatés
 		// echo '</pre>';
+		// die;
 	}
 
 
@@ -842,7 +857,7 @@ class noSqlDb extends base
 
 
 	/**
-	 * Récupération du nom de l'interval dans la timeLine
+	 * Récupération du nom de l'intervalle dans la timeLine
 	 * Libelle de chaques colonnes
 	 *
 	 * @param  	object		$doc		Document MongoDb
@@ -871,11 +886,17 @@ class noSqlDb extends base
 				$stepLib = $doc->_id->hour . ':00';
 				break;
 			case 'int_JOUR' :
-				$stepLib = $this->days[$req[0]->_id->dayOfWeek];
+				$stepLib = $this->days[$doc->_id->dayOfWeek];
 				break;
 			default :
 				$stepLib = 'Unknown';
 				break;
+		}
+
+		// Pour que le array_merge de la méthode "checkIntervals()" fonctionne
+		// On ajoute un espace si la clé est numérique
+		if (is_numeric($stepLib)) {
+			$stepLib .= " ";
 		}
 
 		return $stepLib;
@@ -918,7 +939,7 @@ eof;
 		libIncluder::add_JsScript($js);
 
 
-		// Choix des intervals de temps
+		// Choix des intervalles de temps
 		$options = array();
 
 		foreach ($this->stepActiv as $k=>$v) {
@@ -992,7 +1013,7 @@ eof;
 					    </div>
 						<div class="col-sm-2" style="padding:0; margin:0 2px 5px 2px;">
 							<select name="stepTimeline" id="stepTimeline" class="form-control" required>
-								<option value="">-- Intervals --</option>
+								<option value="">-- Intervalles --</option>
 								$options
 							</select>
 						</div>
@@ -1079,21 +1100,25 @@ eof;
 
 
 	/**
-	 * Permet de compléter les lignes n'ayant pas de valeurs pour tous les intervals par un 0
+	 * Permet de compléter les lignes n'ayant pas de valeurs pour tous les intervalles par un 0
 	 */
 	private function checkIntervals()
+
 	{
 		// Remise en ordre croissant des libellés
-		ksort($this->libelle);
+		if ($this->stepTimeline != 'int_JOUR') {
+			ksort($this->libelle);
 
-		// Mise en ordre de tous les intervals connus
-		sort($this->intervals);
+			// Mise en ordre de tous les intervalles connus
+			sort($this->intervals);
+		}
 
-		$intervals = array();
+		// Permet de connaître tous les intervals (de toutes les lignes)
 		foreach($this->intervals as $interval) {
 			$intervals[$interval] = 0;
 		}
 
+		// On ajoute les intervalles vides de la ligne avec la valeur 0
 		foreach ($this->data as $line => $val) {
 
 			$this->data[$line]['values'] = array_merge($intervals, $val['values']);

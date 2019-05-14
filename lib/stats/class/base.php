@@ -104,10 +104,9 @@ class base
 		// Librairies JS & CSS à charger
 		libIncluderList::add_bootstrapSelect();
 		libIncluderList::add_bootstrapDatetimepicker();
-		libIncluderList::add_highCharts();
+		libIncluderList::add_stats();
 
 		// Scripts JS & CSS à charger
-		libIncluder::add_CssLib("/vendor/vw/framework/lib/stats/css/stats.css");
 		libIncluder::add_JsScript("$('[data-tooltip]').tooltip();");
 
 		// Chargement des scripts liées au grahique
@@ -749,14 +748,14 @@ eof;
 		$html = '<thead><tr>' . chr(10);
 		$html.= '<th align="left" style="'.$borderBottom.'">Libellés</th>' . chr(10);
 
-		// Affichage des champsLDATEDEB
+		// Affichage des champs
 		foreach ($this->libelle as $k => $v) {
 			$attrs = array();
 			$label = null;
 
 			if (is_array($v)) {
 
-				if (isset($this->stepTimeline)  &&  $this->stepTimeline == 'int_JOUR') {
+				if (isset($this->stepTimeline)  &&  $this->stepTimeline == 'int_JOUR'  && is_numeric($v['label'])) {
 					$v['label'] = $this->jourSemaine[$v['label']];
 				}
 
