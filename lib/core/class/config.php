@@ -71,7 +71,7 @@ class config
  	 * @param  string 	$confFile 	nom du fichier
  	 * @return string|null
 	 */
-	private function publicOrPrivateFile($path, $confFile, $extension)
+	private static function publicOrPrivateFile($path, $confFile, $extension)
 	{
 		if (file_exists( $path . $confFile . '.local.' . $extension )) {
 			return $path . $confFile . '.local.' . $extension;
