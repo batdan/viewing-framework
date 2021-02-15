@@ -2,12 +2,10 @@
 	"name": "vw/framework",
 	"type": "library",
 	"licence": "proprietary",
-	"authors": [
-        {
-            "name": "Daniel Gomes",
-            "role": "Developer"
-        }
-    ],
+	"authors": [{
+		"name": "Daniel Gomes",
+		"role": "Developer"
+ 	}],
 	"autoload": {
 		"classmap" : [
 			"lib/"
