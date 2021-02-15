@@ -27,7 +27,7 @@ class sidebar
     /**
      * Constructeur
      */
-    public function __construct($idMenu = null)
+    public function __construct($idMenu=null)
     {
         // PDO
         $this->_dbh = dbSingleton::getInstance();
@@ -40,8 +40,17 @@ class sidebar
 
         // Données sur l'arbre des menus de gauche
         $tree = new tree($this->_idMenu);
-        $this->_leftMenu = $tree->getLeftMenus();  // Récupération des menus de gauche
-        $this->_treeUrl = $tree->getTreeUrl();     // Récupération de l'arborescence de l'url en cours
+
+        // Récupération de l'arborescence de l'url en cours
+        $this->_treeUrl = $tree->getTreeUrl();
+
+        // Récupération des menus de gauche
+        if (isset($_SESSION['tree']) && !empty($idMenu)) {
+            $idTop = $this->_treeUrl[0]['id'];
+            $this->_leftMenu = $_SESSION['tree'][$idTop]['sub'];
+        } else {
+            $this->_leftMenu = $tree->getLeftMenus($idMenu);
+        }
 
         // On déplie les menus liés à la page en cours
         $this->openTree();
@@ -51,12 +60,12 @@ class sidebar
 
         // Hauteur du menu de gauche
         $js = <<<eof
-            /*
-            majHeightLeftSideBar();
-            setTimeout( function() {
-                majHeightLeftSideBar();
-            }, 800);
-            */
+/*
+majHeightLeftSideBar();
+setTimeout( function() {
+    majHeightLeftSideBar();
+}, 800);
+*/
 eof;
         libIncluder::add_JsScript($js);
     }
@@ -294,7 +303,7 @@ eof;
     private function openTree()
     {
         // Code JS
-		$js = array();
+		$js = [];
 
         if ($this->_treeUrl !== false) {
 

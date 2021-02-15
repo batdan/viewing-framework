@@ -114,14 +114,15 @@ class tree
 
                         if ($res_ws->lien_interne == 1) {
 
-                            $getIdProject = $res->id;
-
                             $proto = 'http://';
                             if ($_SERVER['SERVER_PROTOCOL'] == 'HTTPS') {
                                 $proto = 'https://';
                             }
 
-                            if ($json_ws = file( $proto . $_SERVER['HTTP_HOST'] . $res_ws->url)) {
+                            $Wslink = $proto . $_SERVER['HTTP_HOST'] . $res_ws->url;
+                            $Wsget = '?id_project=' . $res->id;
+
+                            if ($json_ws = file($Wslink . $Wsget)) {
 
                                 $json_ws = $json_ws[0];
                                 $sub = json_decode($json_ws, true);
@@ -195,12 +196,16 @@ class tree
     public function getTreeUrl()
     {
         // Récupération des informations sur le menu sélectionné
-        $tree = $this->getTree();
+        if (isset($_SESSION['tree'])) {
+            $tree = $_SESSION['tree'];
+        } else {
+            $tree = $this->getTree();
+        }
 
         // Récupération de l'élément de menu sélectionné
-        $treeUrl    = array();
+        $treeUrl = [];
 
-        if (! is_null($this->_idMenu)) {
+        if (!is_null($this->_idMenu)) {
             $this->getTreeUrl_aux($tree, $treeUrl, $this->_idMenu);
         } else {
             $this->getTreeUrl_aux($tree, $treeUrl);
@@ -321,14 +326,17 @@ class tree
      *
      * @return  integer
      */
-    public function getLeftMenus()
+    public function getLeftMenus($idMenu=null)
     {
         $topParent = $this->topParent();
 
         if ($topParent !== false) {
-            return $this->getTree( $topParent['id'], ($topParent['level'] + 1) );
+            return $this->getTree(
+                $topParent['id'],
+                $topParent['level'] + 1
+            );
         } else {
-            return array();
+            return [];
         }
     }
 

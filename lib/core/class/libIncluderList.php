@@ -67,8 +67,7 @@ class libIncluderList extends libIncluder
 
         $css    = array("/vendor/vw/framework/lib/template/css/sidebar.css",
                         "/vendor/vw/framework/lib/template/css/navbar.css",
-                        "/lib/template/css/default.css",
-                        "/lib/template/css/sidebar.css",);
+                        "/lib/template/css/default.css");
 
         parent::add_JsLib($js, $optimize);
         parent::add_CssLib($css, $optimize);
