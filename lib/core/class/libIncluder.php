@@ -99,7 +99,7 @@ class libIncluder
 
                     $js = str_replace(chr(10).chr(10), chr(10), $js);
 
-                    $js = \JSMin\JSMin::minify($js);
+                    $js = \JSMin::minify($js);
 
                     $script .= $js . chr(10);
                 }
@@ -250,7 +250,7 @@ class libIncluder
 	        foreach ($_SESSION['addJsScripts'] as $code) {
 
                 if ( $optimize === true ) {
-                    $html .= \JSMin\JSMin::minify($code) . chr(10);
+                    $html .= \JSMin::minify($code) . chr(10);
                 } else {
                     $html .= $code . chr(10);
                 }
