@@ -16,7 +16,7 @@
 		"firephp/firephp-core": "@stable",
         "danack/syntaxhighlighter": "@stable",
 		"jenner/simple_fork": "@stable",
-		"mrclay/minify": "@stable"
+		"mrclay/minify": "dev-master@dev"
 	},
 	"license": [
        "GPL-3.0-or-later"
