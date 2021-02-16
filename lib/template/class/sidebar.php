@@ -324,24 +324,41 @@ eof;
         }
 
         // On rend visible tous les éléments du niveau de la sélection
-        if (isset($this->_treeUrl[count($this->_treeUrl) - 2])) {
-            $id_parent = $this->_treeUrl[count($this->_treeUrl) - 1]['id_parent'];
-            $listChilds = $this->searchChields($this->_leftMenu, $id_parent);
 
-            if (isset($listChilds) && is_array($listChilds) && count($listChilds) > 0) {
+        // Dernier niveau
+        $page = end($this->_treeUrl);
+        $id_parent = $page['id_parent'];
+        $listChilds = $this->searchChields($_SESSION['tree'], $id_parent);
+        foreach ($listChilds as $k => $v) {
+            if (!empty($v['path']) && !strstr($_SERVER['REQUEST_URI'], $v['path'])) {
+                $js[] = "$('#li_" . $k . "').removeAttr('style');";
+            }
+        }
+
+        // niveau n-1
+        if (isset($this->_treeUrl[count($this->_treeUrl) -3])) {
+            $page = $this->_treeUrl[count($this->_treeUrl) -2];
+            if ($page['level']) {
+                $id_parent = $page['id_parent'];
+                $listChilds = $this->searchChields($_SESSION['tree'], $id_parent);
                 foreach ($listChilds as $k => $v) {
-                    $js[] = "$('#li_" . $k . "').removeAttr('style');";
+                    if (!empty($v['path']) && !strstr($_SERVER['REQUEST_URI'], $v['path'])) {
+                        $js[] = "$('#li_" . $k . "').removeAttr('style');";
+                    }
                 }
             }
         }
 
-        if (isset($this->_treeUrl[count($this->_treeUrl) - 3])) {
-            $id_parent = $this->_treeUrl[count($this->_treeUrl) - 2]['id_parent'];
-            $listChilds = $this->searchChields($this->_leftMenu, $id_parent);
-
-            if (isset($listChilds) && is_array($listChilds) && count($listChilds) > 0) {
+        // niveau n-2
+        if (isset($this->_treeUrl[count($this->_treeUrl) -3])) {
+            $page = $this->_treeUrl[count($this->_treeUrl) -3];
+            if ($page['level']) {
+                $id_parent = $page['id_parent'];
+                $listChilds = $this->searchChields($_SESSION['tree'], $id_parent);
                 foreach ($listChilds as $k => $v) {
-                    $js[] = "$('#li_" . $k . "').removeAttr('style');";
+                    if (!empty($v['path']) && !strstr($_SERVER['REQUEST_URI'], $v['path'])) {
+                        $js[] = "$('#li_" . $k . "').removeAttr('style');";
+                    }
                 }
             }
         }
@@ -368,24 +385,36 @@ eof;
 
 
     /**
-     * Récupération des enfants d'un menu
+     * Récupération les enfants d'un menu
      */
     private function searchChields($menus, $id_parent)
     {
-        $res = false;
+        $i=0;
 
         foreach ($menus as $k => $v) {
             if ($k == $id_parent) {
-                $res = $v['sub'];
-                break;
-            } else {
+                $i++;
+                return $v['sub'];
+            }
+        }
+
+        if ($i==0) {
+            foreach ($menus as $k => $v) {
                 if (is_array($v['sub'])) {
                     $res = $this->searchChields($v['sub'], $id_parent);
+                    $lastPage = end($res);
+                    if ($lastPage['id_parent'] == $id_parent) {
+                        break;
+                    }
                 }
             }
         }
 
-        return $res;
+        if (isset($res)) {
+            return $res;
+        }
+
+        return [];
     }
 
 
