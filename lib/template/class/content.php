@@ -46,7 +46,7 @@ class content
         // Chargement du menu et de la main
         $container = $this->_dom->createElement('div');
         $container->setAttribute('class', 'container-fluid fill left-main');
-        $container->setAttribute('style', 'display:table; width:100%;');
+        $container->setAttribute('style', 'display:table; width:100%; visibility:hidden;');
 
         if ($emptyContent === false) {
 
