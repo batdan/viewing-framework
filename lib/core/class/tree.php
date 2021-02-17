@@ -114,19 +114,23 @@ class tree
 
                         if ($res_ws->lien_interne == 1) {
 
-                            $proto = 'http://';
-                            if ($_SERVER['SERVER_PROTOCOL'] == 'HTTPS') {
-                                $proto = 'https://';
-                            }
+                            // $proto = 'http://';
+                            // if ($_SERVER['SERVER_PROTOCOL'] == 'HTTPS') {
+                            //     $proto = 'https://';
+                            // }
+                            //
+                            // $Wslink = $proto . $_SERVER['HTTP_HOST'] . $res_ws->url;
+                            // $Wsget = '?id_project=' . $res->id;
+                            //
+                            //
+                            //
+                            // if ($json_ws = file($Wslink . $Wsget)) {
+                            //
+                            //     $json_ws = $json_ws[0];
+                            //     $sub = json_decode($json_ws, true);
+                            // }
 
-                            $Wslink = $proto . $_SERVER['HTTP_HOST'] . $res_ws->url;
-                            $Wsget = '?id_project=' . $res->id;
-
-                            if ($json_ws = file($Wslink . $Wsget)) {
-
-                                $json_ws = $json_ws[0];
-                                $sub = json_decode($json_ws, true);
-                            }
+                            $sub = projectMenus::getMenus($res->id);
 
                         } else {
 
