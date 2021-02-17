@@ -104,7 +104,7 @@ class tree
                 $sub = false;
                 if ($res->id_webservice && !empty($res->id_webservice)) {
 
-                    $req_ws = "SELECT lien_interne, url FROM tree_ws WHERE id = :id";
+                    $req_ws = "SELECT interne, url, class FROM tree_ws WHERE id = :id";
                     $sql_ws = $this->_dbh->prepare($req_ws);
                     $sql_ws->execute( array( ':id'=>$res->id_webservice ));
 
@@ -112,25 +112,25 @@ class tree
 
                         $res_ws  = $sql_ws->fetch();
 
-                        if ($res_ws->lien_interne == 1) {
+                        if ($res_ws->interne == 1) {
 
-                            // $proto = 'http://';
-                            // if ($_SERVER['SERVER_PROTOCOL'] == 'HTTPS') {
-                            //     $proto = 'https://';
-                            // }
-                            //
-                            // $Wslink = $proto . $_SERVER['HTTP_HOST'] . $res_ws->url;
-                            // $Wsget = '?id_project=' . $res->id;
-                            //
-                            //
-                            //
-                            // if ($json_ws = file($Wslink . $Wsget)) {
-                            //
-                            //     $json_ws = $json_ws[0];
-                            //     $sub = json_decode($json_ws, true);
-                            // }
+                            if (empty($res_ws->class)) {
+                                $proto = 'http://';
+                                if ($_SERVER['SERVER_PROTOCOL'] == 'HTTPS') {
+                                    $proto = 'https://';
+                                }
 
-                            $sub = \menus\projectMenus::getMenus($res->id);
+                                $Wslink = $proto . $_SERVER['HTTP_HOST'] . $res_ws->url;
+                                $Wsget = '?id_project=' . $res->id;
+
+                                if ($json_ws = file($Wslink . $Wsget)) {
+                                    $json_ws = $json_ws[0];
+                                    $sub = json_decode($json_ws, true);
+                                }
+                            } else {
+                                $classWs = $res_ws->class;
+                                $sub = $classWs::getMenus($res->id);
+                            }
 
                         } else {
 
