@@ -130,7 +130,7 @@ class tree
                             //     $sub = json_decode($json_ws, true);
                             // }
 
-                            $sub = projectMenus::getMenus($res->id);
+                            $sub = \menus\projectMenus::getMenus($res->id);
 
                         } else {
 
