@@ -35,12 +35,12 @@ class dbSingleton
 			$base = $db[$name]['base'];
 			$user = $db[$name]['user'];
 			$pass = $db[$name]['pass'];
-			$charset = $db[$name]['charset'];
+			$charset = strtolower($db[$name]['charset']);
 
 			self::$instance[$name] = new \PDO("mysql:host=".$host.";charset=".$charset.";dbname=".$base, $user, $pass);
 			self::$instance[$name]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 			self::$instance[$name]->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_OBJ);
-			self::$instance[$name]->setAttribute(\PDO::MYSQL_ATTR_INIT_COMMAND, "SET time_zone = '$gmt'; SET NAMES utf8;");
+			self::$instance[$name]->setAttribute(\PDO::MYSQL_ATTR_INIT_COMMAND, "SET time_zone = '$gmt'; SET NAMES ".$charset." COLLATE ".$charset."_unicode_ci;");
 		}
 
 		return self::$instance[$name];
