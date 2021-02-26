@@ -30,7 +30,7 @@ class control
 	 * Hydratation de la classe et initialisation
 	 * @param array $data
 	 */
-	public function __construct($form, $options=null, $activationVerrou=true, $disabledSave=false)
+	public function __construct($form, array $options=[], $activationVerrou=true, $disabledSave=false)
 	{
 		// Instance PDO
 		$this->_dbh = dbSingleton::getInstance();
@@ -62,8 +62,16 @@ class control
 	public function setForm($form) {
 		$this->_form = $form;
 	}
+
 	public function setOptions($options) {
-		$this->_options = $options;
+		$this->_options = array_merge($this->defaultOptions(), $options);
+	}
+
+	private function defaultOptions()
+	{
+		return [
+			'delete' => true,
+		];
 	}
 
 
@@ -224,7 +232,7 @@ class control
 
 
 		// Bouton sauvegarder et quitter ---------------------------------------
-		if (! empty($this->_form->getClePrimaireId())) {
+		if (!empty($this->_form->getClePrimaireId())) {
 
 			if (isset($this->_options['custumBtn']['saveExit'])) {
 
@@ -247,20 +255,18 @@ class control
 
 				$buttonSaveExit->appendChild($image2);
 			}
-		}
 
+			// Bouton supprimer ----------------------------------------------------
+			if ($this->_options['delete'] !== false) {
+				// Modal de la corbeille
+				foreach ($this->modalTrash()->childNodes as $child) {
+		            $newNode = $this->_dom->importNode($child, true);
+		            $this->_dom->appendChild($newNode);
+		        }
 
-		// Bouton supprimer ----------------------------------------------------
-		if (! empty($this->_form->getClePrimaireId()) && $this->_options['delete'] !== false) {
-
-			// Modal de la corbeille
-			foreach ($this->modalTrash()->childNodes as $child) {
-	            $newNode = $this->_dom->importNode($child, true);
-	            $this->_dom->appendChild($newNode);
-	        }
-
-			// Bouton corbeille
-			$this->_dom->appendChild($this->buttonTrash());
+				// Bouton corbeille
+				$this->_dom->appendChild($this->buttonTrash());
+			}
 		}
 
 		// Affichage groupe de boutons

@@ -404,7 +404,7 @@ eof;
                 if (is_array($v['sub'])) {
                     $res = $this->searchChields($v['sub'], $id_parent);
                     $lastPage = end($res);
-                    if ($lastPage['id_parent'] == $id_parent) {
+                    if (isset($lastPage['id_parent']) && $lastPage['id_parent'] == $id_parent) {
                         break;
                     }
                 }

@@ -51,12 +51,10 @@ foreach ($chps as $k => $v) {
 
 ///////////////////////////////////////////////////////////////////////////
 // Récupération des modifiers SAVE
-$saveModifier = json_decode($_POST['listeSaveModifier']);
+$saveModifier = json_decode($_POST['listeSaveModifier'], true);
 
 // On recréé le formulaire pour appliquer les 'saveModifier'
 if (count($saveModifier) > 0) {
-
-    $saveModifier = get_object_vars($saveModifier);
 
     $form = new form\form();
     $form->setBddName($_POST['bddName']);
