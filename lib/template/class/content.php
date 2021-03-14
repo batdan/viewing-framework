@@ -38,7 +38,7 @@ class content
         }
 
         // JS content
-        libIncluder::add_JsLib("/vendor/vw/framework/lib/template/js/template.js", false);
+        libIncluder::add_JsLib("/vendor/vw/framework/lib/template/js/template.js");
 
         $this->init($emptyContent);
     }
