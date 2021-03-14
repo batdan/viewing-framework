@@ -156,9 +156,14 @@ class libIncluderList extends libIncluder
         self::add_jQuery();
 
         // Bootstrap 3
-        $js     = array("//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js");
+        // $js     = array("//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js");
+        //
+        // $css    = array("//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css",
+        //                 "//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css");
 
-        $css    = array("//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css",
+        $js     = array("//stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js");
+
+        $css    = array("//stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css",
                         "//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css");
 
         parent::add_JsLib($js, $optimize);
