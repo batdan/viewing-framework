@@ -24,7 +24,7 @@ class content
      * @param   integer         $idMenu             Permet de relier une page à un élémént de menu
      * @param   boolean         $emptyContent       Permet de démarrer avec un content vierge
      */
-    public function __construct($idMenu=null, $emptyContent=false)
+    public function __construct($idMenu=null, $emptyContent=false, $fadeIn=true)
     {
         // Permet de relier une page à un élémént de menu
         $this->_idMenu = $idMenu;
@@ -38,21 +38,28 @@ class content
         }
 
         // JS content
-        libIncluder::add_JsLib("/vendor/vw/framework/lib/template/js/template.js");
+        if ($fadeIn) {
+            libIncluder::add_JsLib("/vendor/vw/framework/lib/template/js/template.js");
+        }
 
-        $this->init($emptyContent);
+        $this->init($emptyContent, $fadeIn);
     }
 
 
     /**
      * Initialisation du conteneur
      */
-    private function init($emptyContent)
+    private function init($emptyContent, $fadeIn)
     {
+        $styleContainer = 'display:table; width:100%;';
+        if ($fadeIn) {
+            $styleContainer .= ' visibility:hidden;';
+        }
+
         // Chargement du menu et de la main
         $container = $this->_dom->createElement('div');
         $container->setAttribute('class', 'container-fluid fill left-main');
-        $container->setAttribute('style', 'display:table; width:100%; visibility:hidden;');
+        $container->setAttribute('style', $styleContainer);
 
         if ($emptyContent === false) {
 
