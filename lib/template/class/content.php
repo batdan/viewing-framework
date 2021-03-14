@@ -1,6 +1,9 @@
 <?php
 namespace tpl;
 
+use core\libIncluderList;
+use core\libIncluder;
+
 /**
  * Contenu de la page
  *
@@ -31,8 +34,11 @@ class content
 
         // Chargemement des scripts css et js génériques du backoffice
         if ($emptyContent === false) {
-            \core\libIncluderList::add_vwDefault();
+            libIncluderList::add_vwDefault();
         }
+
+        // JS content
+        libIncluder::add_JsLib("/vendor/vw/framework/lib/template/js/template.js", false);
 
         $this->init($emptyContent);
     }
@@ -46,7 +52,7 @@ class content
         // Chargement du menu et de la main
         $container = $this->_dom->createElement('div');
         $container->setAttribute('class', 'container-fluid fill left-main');
-        $container->setAttribute('style', 'display:table; width:100%;');
+        $container->setAttribute('style', 'display:table; width:100%; visibility:hidden;');
 
         if ($emptyContent === false) {
 
