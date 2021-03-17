@@ -17,7 +17,7 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
     public function run()
     {
         // Instance PDO
-        $dbh = \core\dbSingleton::getInstance();
+        $dbh = dbSingleton::getInstance();
 
         // Récupération des projets à mettre à jour
         $req = "SELECT      id, nom_code, cron_maj
@@ -51,7 +51,7 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
                 $hydrate = array( 'nomProject'=>$res->nom_code );
 
                 // Mise à jour du projet
-                new \core\diffusion($hydrate);
+                new diffusion($hydrate);
 
             } else {
 
@@ -67,14 +67,14 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
         }
 
         // Close instance PDO
-        \core\dbSingleton::closeInstance();
+        dbSingleton::closeInstance();
     }
 
 
     public static function countDiff()
     {
         // Instance PDO
-        $dbh = \core\dbSingleton::getInstance();
+        $dbh = dbSingleton::getInstance();
 
         // On récupère le nombre exact de table de diffusion à créer ou checker
         $req = "SELECT      COUNT(id) AS count_id
@@ -92,7 +92,7 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
         $res = $sql->fetch();
 
         // Close instance PDO
-        \core\dbSingleton::closeInstance();
+        dbSingleton::closeInstance();
 
         return $res->count_id;
     }
@@ -101,7 +101,7 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
     public static function checkDiff()
     {
         // Instance PDO
-        $dbh = \core\dbSingleton::getInstance();
+        $dbh = dbSingleton::getInstance();
 
         $req = "SELECT statut FROM cron WHERE name = :name";
         $sql= $dbh->prepare($req);
@@ -119,14 +119,14 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
         return false;
 
         // Close instance PDO
-        \core\dbSingleton::closeInstance();
+        dbSingleton::closeInstance();
     }
 
 
     public static function initMajDiffusion()
     {
         // Instance PDO
-        $dbh = \core\dbSingleton::getInstance();
+        $dbh = dbSingleton::getInstance();
 
         // On vérifie si une entrée est présente pour la gestion des diffusion
         $req = "SELECT id FROM cron WHERE name = :name";
@@ -144,14 +144,14 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
         $sql2->execute( array( ':name'=>'diffusion' ));
 
         // Close instance PDO
-        \core\dbSingleton::closeInstance();
+        dbSingleton::closeInstance();
     }
 
 
     public static function endMajDiffusion()
     {
         // Instance PDO
-        $dbh = \core\dbSingleton::getInstance();
+        $dbh = dbSingleton::getInstance();
 
         // Passage du statut du cron 'diffusion' a 1
         $req = "UPDATE cron SET statut = 0, cron_fin = NOW() WHERE name = :name";
@@ -159,20 +159,20 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
         $sql->execute( array( ':name'=>'diffusion' ));
 
         // Close instance PDO
-        \core\dbSingleton::closeInstance();
+        dbSingleton::closeInstance();
     }
 
 
     public static function cleanProject()
     {
         // Instance PDO
-        $dbh = \core\dbSingleton::getInstance();
+        $dbh = dbSingleton::getInstance();
 
         // Passage du cron_check et cron_maj à 0
         $req = "UPDATE projects SET cron_check = 0, cron_maj = 0";
         $sql = $dbh->query($req);
 
         // Close instance PDO
-        \core\dbSingleton::closeInstance();
+        dbSingleton::closeInstance();
     }
 }
