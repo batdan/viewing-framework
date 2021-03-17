@@ -107,12 +107,12 @@ class diffusion
         $res = $sql->fetch();
 
         $this->_infosDiffusion = tools::diffusionProg(
-                                                        $res->publi_deb,
-                                                        $res->publi_fin,
-                                                        $res->courbe,
-                                                        $res->objectif,
-                                                        $res->coeff
-                                                     );
+            $res->publi_deb,
+            $res->publi_fin,
+            $res->courbe,
+            $res->objectif,
+            $res->coeff
+        );
     }
 
 
@@ -124,14 +124,14 @@ class diffusion
         $table = $this->_prefixeTables . $this->_nomProject;
 
         $req = "CREATE TABLE IF NOT EXISTS $table (
-                                        		  `rang`                  int(11)         NOT NULL AUTO_INCREMENT,
-                                        		  `dns`                   varchar(52)     NOT NULL,
-                                        		  `cde_postal`            varchar(7)      NOT NULL,
-                                        		  `lat_deg`               float(10,6)     NOT NULL,
-                                        		  `long_deg`              float(10,6)     NOT NULL,
-                                        		  `rang_villes_proches`   varchar(255)    DEFAULT NULL,
-                                        		  PRIMARY KEY (`rang`)
-                                        		  )
+        		  `rang`                  int(11)         NOT NULL AUTO_INCREMENT,
+        		  `dns`                   varchar(52)     NOT NULL,
+        		  `cde_postal`            varchar(7)      NOT NULL,
+        		  `lat_deg`               float(10,6)     NOT NULL,
+        		  `long_deg`              float(10,6)     NOT NULL,
+        		  `rang_villes_proches`   varchar(255)    DEFAULT NULL,
+        		  PRIMARY KEY (`rang`)
+        		)
                 ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 
         $sql = $this->_dbh_diff->query($req);

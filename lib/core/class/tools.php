@@ -100,7 +100,7 @@ class tools
         if ($today->getTimestamp() < $date1->getTimestamp()) {
             $nbJoursToday = 0;
         } else {
-            $nbJoursToday = ceil(($today->getTimestamp() - $date1->getTimestamp()) / 86400);    // 86400 : Nb secondes 1 jour
+            $nbJoursToday = floor(($today->getTimestamp() - $date1->getTimestamp()) / 86400);    // 86400 : Nb secondes 1 jour
         }
 
         // On vérifie que la date de fin soit bien supérieur à la date de début

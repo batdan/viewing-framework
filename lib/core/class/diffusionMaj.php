@@ -22,17 +22,17 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
         // Récupération des projets à mettre à jour
         $req = "SELECT      id, nom_code, cron_maj
 
-        FROM        projects
+                FROM        projects
 
-        WHERE       activ 		= 1
-        AND         cron_check  = 0
-        AND         publi_deb 	IS NOT NULL AND publi_deb 	<= CURDATE()
-        AND         publi_fin 	IS NOT NULL AND publi_fin 	>= CURDATE()
-        AND         objectif 	IS NOT NULL AND objectif 	<> ''
-        AND         courbe 		IS NOT NULL AND courbe 		<> ''
-        AND         coeff 		IS NOT NULL AND coeff 		<> ''
+                WHERE       activ 		= 1
+                AND         cron_check  = 0
+                AND         publi_deb 	IS NOT NULL AND publi_deb 	<= CURDATE()
+                AND         publi_fin 	IS NOT NULL AND publi_fin 	>= CURDATE()
+                AND         objectif 	IS NOT NULL AND objectif 	<> ''
+                AND         courbe 		IS NOT NULL AND courbe 		<> ''
+                AND         coeff 		IS NOT NULL AND coeff 		<> ''
 
-        LIMIT       1";
+                LIMIT       1";
 
         $sql = $dbh->query($req);
 
@@ -79,17 +79,25 @@ class diffusionsMaj implements \Jenner\SimpleFork\Runnable
         // On récupère le nombre exact de table de diffusion à créer ou checker
         $req = "SELECT      COUNT(id) AS count_id
 
-        FROM        projects
+                FROM        projects
 
-        WHERE       activ 		= 1
-        AND         publi_deb 	IS NOT NULL AND publi_deb 	<= CURDATE()
-        AND         publi_fin 	IS NOT NULL AND publi_fin 	>= CURDATE()
-        AND         objectif 	IS NOT NULL AND objectif 	<> ''
-        AND         courbe 		IS NOT NULL AND courbe 		<> ''
-        AND         coeff 		IS NOT NULL AND coeff 		<> ''";
+                WHERE       activ 		= 1
+                AND         publi_deb 	IS NOT NULL AND publi_deb 	<= CURDATE()
+                AND         publi_fin 	IS NOT NULL AND publi_fin 	>= CURDATE()
+                AND         objectif 	IS NOT NULL AND objectif 	<> ''
+                AND         courbe 		IS NOT NULL AND courbe 		<> ''
+                AND         coeff 		IS NOT NULL AND coeff 		<> ''";
 
         $sql = $dbh->query($req);
         $res = $sql->fetch();
+
+        echo chr(10);
+        echo $res->count_id;
+        echo chr(10);
+        echo chr(10);
+
+
+
 
         // Close instance PDO
         dbSingleton::closeInstance();
