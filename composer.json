@@ -14,7 +14,7 @@
 	"require": {
 		"greenlion/php-sql-parser": "@stable",
 		"firephp/firephp-core": "@stable",
-        "danack/syntaxhighlighter": "@stable",
+        "batdan/syntaxhighlighter": "@stable",
 		"jenner/simple_fork": "@stable",
 		"mrclay/minify": "@stable"
 	},
